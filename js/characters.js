@@ -812,24 +812,21 @@
       x.fillStyle = U.rgb(col.skin);
       x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.5, hd[1] + fwd[1] * hr * 0.5 + 0.1 * hr, hr * 0.55, hr * 0.72, ha * d * 0.5, 0, Math.PI * 2); x.fill();
     } else {
+      // canonical head: facing +x, upright; turned and mirrored to match the pose
+      x.save();
+      x.translate(hd[0], hd[1]);
+      x.scale(d, 1);
+      x.rotate(ha);
       x.fillStyle = U.rgb(col.skin);
-      x.beginPath(); x.arc(hd[0], hd[1], hr, 0, Math.PI * 2); x.fill();
-      // jaw
-      x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.35, hd[1] + hr * 0.45, hr * 0.62, hr * 0.62, 0, 0, Math.PI * 2); x.fill();
-      // nose
-      x.beginPath(); x.arc(hd[0] + fwd[0] * hr * 0.95 + fwd[1] * 0.1 * hr * d, hd[1] + fwd[1] * hr * 0.95 + hr * 0.12, hr * 0.2, 0, Math.PI * 2); x.fill();
-      // hair: cap over the back and top
+      x.beginPath(); x.arc(0, 0, hr, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.ellipse(hr * 0.3, hr * 0.42, hr * 0.62, hr * 0.64, 0, 0, Math.PI * 2); x.fill(); // jaw
+      x.beginPath(); x.ellipse(hr * 0.98, hr * 0.12, hr * 0.2, hr * 0.17, 0.3, 0, Math.PI * 2); x.fill(); // nose
       x.fillStyle = U.rgb(col.hair);
-      x.beginPath();
-      x.arc(hd[0] - fwd[0] * hr * 0.12, hd[1] - hr * 0.08, hr * (child ? 1.06 : 1.02), Math.PI + (d > 0 ? -0.25 : 0.25) + ha * d * 0, Math.PI * 2 + 0.35, false);
-      x.closePath();
-      x.fill();
-      x.beginPath();
-      x.arc(hd[0] - fwd[0] * hr * 0.3, hd[1] - hr * 0.1, hr * 0.85, 0, Math.PI * 2);
-      x.fill();
-      // ear
+      x.beginPath(); x.arc(-hr * 0.06, -hr * 0.06, hr * (child ? 1.07 : 1.03), Math.PI - 0.35, Math.PI * 2 - 0.55, false); x.closePath(); x.fill();
+      x.beginPath(); x.arc(-hr * 0.32, -hr * 0.02, hr * 0.84, 0, Math.PI * 2); x.fill();
       x.fillStyle = U.rgb(U.mul(col.skin, 0.8));
-      x.beginPath(); x.ellipse(hd[0] - fwd[0] * hr * 0.05, hd[1] + hr * 0.15, hr * 0.16, hr * 0.26, 0, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.ellipse(-hr * 0.02, hr * 0.14, hr * 0.15, hr * 0.25, 0, 0, Math.PI * 2); x.fill(); // ear
+      x.restore();
       if (o.beard && kind === 'man') {
         x.fillStyle = U.rgb(col.hair, 0.3);
         x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.4, hd[1] + hr * 0.6, hr * 0.55, hr * 0.42, 0, 0, Math.PI * 2); x.fill();
@@ -846,16 +843,23 @@
       }
       // eye and brow when the figure is big enough to read them
       if (h > 220) {
-        const hu = [Math.sin(ha) * d, -Math.cos(ha)];
-        const ey = [hd[0] + fwd[0] * hr * 0.62 + hu[0] * hr * 0.12, hd[1] + fwd[1] * hr * 0.62 + hu[1] * hr * 0.12];
+        x.save();
+        x.translate(hd[0], hd[1]);
+        x.scale(d, 1);
+        x.rotate(ha);
         x.fillStyle = 'rgba(20,14,12,0.85)';
-        x.beginPath(); x.ellipse(ey[0], ey[1], hr * 0.08, hr * 0.1, 0, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.ellipse(hr * 0.6, -hr * 0.08, hr * 0.08, hr * 0.1, 0, 0, Math.PI * 2); x.fill();
         x.strokeStyle = U.rgb(col.hair, 0.9);
         x.lineWidth = hr * (child ? 0.07 : 0.1);
-        x.beginPath();
-        x.moveTo(ey[0] - fwd[0] * hr * 0.15 + hu[0] * hr * 0.22, ey[1] - fwd[1] * hr * 0.15 + hu[1] * hr * 0.22);
-        x.lineTo(ey[0] + fwd[0] * hr * 0.18 + hu[0] * hr * 0.25, ey[1] + fwd[1] * hr * 0.18 + hu[1] * hr * 0.25);
-        x.stroke();
+        x.lineCap = 'round';
+        x.beginPath(); x.moveTo(hr * 0.42, -hr * 0.3); x.lineTo(hr * 0.8, -hr * 0.28); x.stroke();
+        if (kind === 'man') {
+          x.fillStyle = U.rgb(col.hair, 0.25);
+          x.beginPath(); x.ellipse(hr * 0.42, hr * 0.55, hr * 0.5, hr * 0.38, 0, 0, Math.PI * 2); x.fill();
+        }
+        x.fillStyle = U.rgb(U.mul(col.skin, 0.55), 0.9);
+        x.fillRect(hr * 0.62, hr * 0.5, hr * 0.28, hr * 0.05); // mouth
+        x.restore();
       }
     }
     drawArm(La, false);
@@ -1014,7 +1018,7 @@
     // sleeve
     if (o.sleeve) {
       ctx.fillStyle = U.rgb(o.sleeve);
-      D.poly(ctx, [[-0.55, 0.45], [0.55, 0.45], [0.75, 4], [-0.75, 4]]);
+      D.poly(ctx, [[-0.55, 0.45], [0.55, 0.45], [0.9, 16], [-0.9, 16]]); // runs out of frame: never a floating cuff
       ctx.fill();
     }
     ctx.strokeStyle = U.rgb(skin);

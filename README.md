@@ -1,4 +1,4 @@
-# حنين — Haneen
+# حنين — Nostalgia
 
 **A film directed by Qussai Anas · فيلم من إخراج قصي أنس**
 
@@ -46,7 +46,7 @@ URL options:
 | 10 | Work | 34 s | The day repeats the night: the coffee comes in the same finjan, the office aisle is the corridor, the pile of paper grows back however much he clears, and the office floods like the sea until he closes his eyes |
 | 11 | The red balloon | 33 s | Golden afternoon. A little girl with dark brown hair, in a blue dress, gives him her red balloon |
 | 12 | Final moment | 40 s | His first smile. He lets the balloon go by his own choice. Home. The same bedroom, golden now; the balloon drifts past the window |
-| — | Ending | 25 s | حنين · "To the balloon every child is looking for, and everyone who was once a child" · a note that the film was made entirely with AI |
+| — | Ending | 25 s | حنين · "To the generations still searching for their balloon" · a one-line note: made entirely with AI · Claude |
 
 The red balloon is the thread of the story: lost in childhood, given back by a stranger's child, and finally released by his own choice. It appears only in the waking world and the memory, never in the nightmares.
 

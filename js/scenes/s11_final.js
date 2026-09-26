@@ -229,7 +229,7 @@
         ctx.fillStyle = `rgba(214,204,190,${a * 0.6})`;
         ctx.font = '300 18px Georgia, "Times New Roman", serif';
         ctx.direction = 'ltr';
-        ctx.fillText('H A N E E N', W / 2, H / 2 + 88);
+        ctx.fillText('N O S T A L G I A', W / 2, H / 2 + 88);
         S.balloon(ctx, W / 2 + 170, U.lerp(H / 2 - 40, H / 2 - 110, t / 8), 9, t, [W / 2 + 172, U.lerp(H / 2 + 5, H / 2 - 65, t / 8)], a * 0.9);
       }
       // the dedication
@@ -238,24 +238,21 @@
         ctx.fillStyle = `rgba(232,222,206,${b * 0.95})`;
         ctx.font = `400 46px ${AR}`;
         ctx.direction = 'rtl';
-        ctx.fillText('إلى البالون الذي يبحث عنه كل طفل،', W / 2, H / 2 - 34);
+        ctx.fillText('إلى الأجيال التي لا زالت', W / 2, H / 2 - 34);
         ctx.direction = 'rtl';
-        ctx.fillText('وكل من كان يومًا طفلًا.', W / 2, H / 2 + 38);
+        ctx.fillText('تبحث عن بالونها.', W / 2, H / 2 + 38);
       }
-      // disclaimer, last
+      // a short note, last
       const c = U.win(t, 17.0, 24.8, 1.2, 1.6);
       if (c > 0) {
-        ctx.fillStyle = `rgba(200,192,180,${c * 0.85})`;
+        ctx.fillStyle = `rgba(200,192,180,${c * 0.8})`;
         ctx.font = `400 30px ${AR}`;
         ctx.direction = 'rtl';
-        ctx.fillText('أُنتج هذا الفيلم بالكامل باستخدام الذكاء الاصطناعي — Claude من Anthropic.', W / 2, H / 2 - 30);
-        ctx.font = `400 24px ${AR}`;
-        ctx.fillStyle = `rgba(200,192,180,${c * 0.6})`;
-        ctx.direction = 'rtl';
-        ctx.fillText('كل صورة وكل صوت وكل نغمة فيه كُتبت بالكود.', W / 2, H / 2 + 22);
+        ctx.fillText('صُنع بالكامل بالذكاء الاصطناعي · Claude', W / 2, H / 2 - 14);
+        ctx.fillStyle = `rgba(200,192,180,${c * 0.55})`;
         ctx.font = '300 20px Georgia, "Times New Roman", serif';
         ctx.direction = 'ltr';
-        ctx.fillText('Made entirely with AI (Claude by Anthropic). Every image, sound and note was written in code.', W / 2, H / 2 + 70);
+        ctx.fillText('Made entirely with AI · Claude', W / 2, H / 2 + 34);
       }
     },
   });

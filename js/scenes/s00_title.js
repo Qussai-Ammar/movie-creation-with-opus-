@@ -33,7 +33,7 @@
         ctx.fillText('حنين', W / 2, H / 2 - 20);
         ctx.fillStyle = `rgba(214,204,190,${b * 0.6})`;
         ctx.font = '300 20px Georgia, "Times New Roman", serif';
-        const txt = 'H A N E E N';
+        const txt = 'N O S T A L G I A';
         ctx.direction = 'ltr';
         ctx.fillText(txt, W / 2, H / 2 + 98);
       }
