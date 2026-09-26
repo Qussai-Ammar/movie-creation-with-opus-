@@ -194,6 +194,8 @@
         rim: { col: [255, 226, 180], dx: 3, dy: 0 },
       });
     }
+    // a red balloon tied by the window, waiting for him
+    if (o.balloon !== false) FILM.sets.balloon(ctx, 1285 + Math.sin(t * 0.9) * 8, 205 + Math.sin(t * 1.3) * 5, 44, t, [1300, 470]);
     // sunbeam and dust
     D.rays(ctx, t, { x: 1480, y: 180, ang: Math.PI * 0.8, spread: 0.35, len: 1500, n: 6, col: LIGHT, alpha: 0.14, width: 0.05, seed: 6 });
     D.dust(ctx, t, { x: 700, y: 150, w: 800, h: 450, n: 70, seed: 61, size: 1.8, col: [255, 240, 210], alpha: 0.6, vx: -3, vy: 2, wob: 12 });
@@ -242,7 +244,7 @@
     return FILM.slowLayer(name, Math.floor(t * 6), (x) => {
       src.x.save();
       D.cam(src.x, cx, cy, z);
-      kitchen(src.x, t, { boy: false, mom });
+      kitchen(src.x, t, { boy: false, mom, balloon: mom });
       src.x.restore();
       x.filter = `blur(${blur * FILM.q}px)`;
       D.buf(x, src);
@@ -382,9 +384,10 @@
         ctx.globalCompositeOperation = 'screen';
         D.glow(ctx, 1500, 200, 800, [255, 200, 120], 0.4);
         ctx.restore();
+        const take = U.ss(1.6, 2.6, lt);
         const boy = C.figure(ctx, {
           x: 1180, y: 560, h: 600, kind: 'boy', facing: -1, col: BOY, sleeves: 'short', shoe: [60, 60, 70],
-          pose: { torso: -0.04, neck: -0.32, head: -0.22, sL: 0.25, eL: 0.4, sR: 0.05, eR: 0.3, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
+          pose: { torso: -0.04, neck: -0.32, head: -0.22, sL: U.lerp(0.25, 2.55, take), eL: U.lerp(0.4, 0.15, take), sR: 0.05, eR: 0.3, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
           rim: { col: [255, 226, 180], dx: 4, dy: -2 },
         });
         const bh = [1180 + boy.hd[0], 560 + boy.hd[1]];
@@ -392,11 +395,18 @@
         const sh = [mx + Math.sin(tau) * 0.29 * mh, my - Math.cos(tau) * 0.29 * mh];
         const stroke = Math.sin(lt * 2.2) * 22 * U.ss(0.5, 1.5, lt);
         const [sA, eA] = reach(sh, [bh[0] - 10 + stroke, bh[1] - boy.hr * 1.05], 0.165 * mh, 0.18 * mh);
-        C.figure(ctx, {
+        const give = U.ss(1.2, 2.2, lt), gone = U.ss(2.8, 3.8, lt);
+        const mom = C.figure(ctx, {
           x: mx, y: my, h: mh, kind: 'mother', facing: 1, col: MOM, shoe: [70, 50, 40],
-          pose: { torso: tau, neck: 0.35, head: 0.2, sL: sA, eL: eA, sR: 0.2, eR: 0.5, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
+          pose: { torso: tau, neck: 0.35, head: 0.2, sL: sA, eL: eA, sR: U.lerp(0.7, 1.15, give) * (1 - gone) + 0.2 * gone, eR: 0.5, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
           rim: { col: [255, 236, 190], dx: 5, dy: -2 },
         });
+        // the balloon passes from her hand into his
+        const mh2 = [mx + mom.hands[1][0], my + mom.hands[1][1]];
+        const bh2 = [1180 + boy.hands[0][0], 560 + boy.hands[0][1]];
+        const pass = U.ss(2.4, 2.9, lt);
+        const end = [U.lerp(mh2[0], bh2[0], pass), U.lerp(mh2[1], bh2[1], pass)];
+        FILM.sets.balloon(ctx, end[0] + 40 + Math.sin(lt * 1.4) * 14, end[1] - 170 + Math.sin(lt * 1.9) * 8, 58, t, end);
         D.rays(ctx, t, { x: 1600, y: -100, ang: Math.PI * 0.7, spread: 0.3, len: 1500, n: 5, col: LIGHT, alpha: 0.12, width: 0.05, seed: 8 });
         D.dust(ctx, t, { n: 60, seed: 64, size: 2, col: [255, 240, 210], alpha: 0.55, vx: -3, vy: 2, wob: 12 });
         goldenGrade(ctx);
@@ -436,6 +446,10 @@
         b.x.fillStyle = g0;
         b.x.fillRect(0, 0, W, H);
         motherFace(b.x, t, lt, { x: 1000, y: 400, s: 400, yaw: 0.1, pitch: 0.02, gaze: [-0.05, 0], smile: 0.85, eye: 0.78, glisten: 1, wet: 1.3 });
+        // the boy's balloon slips away, up past her
+        const up = U.ss(0.2, 3.4, lt);
+        const by = U.lerp(820, -260, up), bx = 1130 + Math.sin(lt * 1.2) * 25;
+        FILM.sets.balloon(b.x, bx, by, 64, t, [bx + 30, by + 300]);
         ctx.save();
         ctx.beginPath();
         ctx.rect(1000 - gw / 2, 70, Math.max(gw, 2), 640);
@@ -497,6 +511,7 @@
       const warm = fx.bed(h, { color: 'brown', type: 'lowpass', f: 140, gain: 0, dest: lp });
       h.param(warm.g.gain, [[0, 0], [35, 0], [39, 0.14], [42, 0.2], [44.2, 0.25]]);
       // it is pulled away from him, then shut
+      h.at(40.25, (w) => { fx.tone(h, w, { type: 'triangle', f: 700, f2: 980, a: 0.02, d: 0.35, gain: 0.02, dest: lp }); fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 2400, Q: 2, d: 0.25, gain: 0.04, dest: lp }); });
       h.at(41.2, (w) => fx.whoosh(h, w, { dur: 3.1, f1: 180, f2: 3000, gain: 0.22, color: 'pink', dest: lp }));
       h.at(44.36, (w) => { fx.thud(h, w, { gain: 0.5, f: 55, d: 0.9 }); fx.burst(h, w + 0.02, { type: 'bandpass', f: 2600, Q: 3, d: 0.03, gain: 0.08 }); });
     },

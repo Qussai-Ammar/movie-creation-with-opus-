@@ -39,6 +39,13 @@
         ctx.stroke();
       }
       ctx.restore();
+      // far above the water, something red
+      if (o.red) {
+        ctx.save();
+        ctx.globalAlpha = 0.42;
+        FILM.sets.balloon(ctx, (o.lightX ?? 960) + 190 + Math.sin(t * 0.7) * 12, surfY - 70 + Math.sin(t * 1.1) * 6, 16, t);
+        ctx.restore();
+      }
       // the light he swims toward
       D.glow(ctx, o.lightX ?? 960, surfY - 30, 520, [170, 235, 230], 0.55);
       D.glow(ctx, o.lightX ?? 960, surfY - 20, 120, [235, 255, 250], 0.8);
@@ -89,7 +96,7 @@
     ctx.save();
     const sh = pull > 0 && pull < 1 ? D.shake(t, 14, 9, 3) : [0, 0];
     ctx.translate(sh[0], sh[1] + (o.camY || 0));
-    sea(ctx, t, surf - (o.camY || 0));
+    sea(ctx, t, surf - (o.camY || 0), { red: true });
     const pose = pull > 0 ? PULL_POSE(u) : C.poses.swim(u, 0.7 + rise * 0.6);
     C.figure(ctx, {
       x, y, h: 330, facing: 1, pose, col: CLOTH, shoe: [18, 18, 20], tint: [TEAL, 0.5], rim: RIM,
@@ -138,7 +145,7 @@
     } else if (t < 19) {
       const lt = t - 11;
       const surf = 90;
-      sea(ctx, t, surf, { lightX: 1010 });
+      sea(ctx, t, surf, { lightX: 1010, red: true });
       const reach = U.ss(0, 5.5, lt);
       const pull = U.easeIn(U.inv(5.6, 6.3, lt));
       const hx = 900 + Math.sin(lt * 0.8) * 20, hy = U.lerp(700, 185, reach) + pull * 1100;
@@ -226,8 +233,8 @@
       const lp = h.filter('lowpass', 700, 0.8);
       lp.connect(h.in);
       // the weight of the water
-      fx.bed(h, { color: 'brown', type: 'lowpass', f: 260, gain: 0.28, dest: lp });
-      fx.bed(h, { color: 'brown', type: 'lowpass', f: 60, gain: 0.3 });
+      fx.bed(h, { color: 'brown', type: 'lowpass', f: 260, gain: 0.2, dest: lp });
+      fx.bed(h, { color: 'brown', type: 'lowpass', f: 60, gain: 0.2 });
       const hiss = fx.bed(h, { color: 'pink', type: 'bandpass', f: 1800, Q: 0.6, gain: 0 });
       // near the surface the world almost becomes audible again
       h.param(hiss.g.gain, [[0, 0], [7.5, 0.0], [9.1, 0.05], [9.3, 0], [15, 0], [16.5, 0.06], [16.7, 0], [22.5, 0], [24.3, 0.05], [24.5, 0]]);

@@ -73,6 +73,11 @@
     ctx.fillRect(800, 190, 150, 460);
     C.figure(ctx, { x: 1010, y: 452, h: 360, view: 'front', kind: 'mother', col: { skin: [190, 150, 116], dress: [70, 56, 48], scarf: [226, 210, 186] }, tint: [[150, 120, 90], 0.25] });
     C.figure(ctx, { x: 905, y: 530, h: 220, view: 'front', kind: 'boy', sleeves: 'short', col: { skin: [196, 156, 120], shirt: [168, 96, 80], pants: [96, 88, 88], hair: [50, 40, 34] }, shoe: [60, 50, 44], tint: [[150, 120, 90], 0.25], pose: { smile: 1 } });
+    // the balloon he held that day, faded red
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    FILM.sets.balloon(ctx, 948, 330, 30, 0, [925, 468]);
+    ctx.restore();
     // a warm echo rises inside the photograph, once
     const echo = U.win(lt, 1.8, 5.0, 1.0, 1.8);
     ctx.save();

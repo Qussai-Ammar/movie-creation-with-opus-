@@ -142,6 +142,12 @@
     fog.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, W, H);
+    // for a moment, a red balloon in front of the end door
+    const rb = U.win(t, 22, 29.3, 1.2, 0.2);
+    if (rb > 0.01) {
+      const bz = Math.min(zE - 1.2, 9.5), bp = pr(0.28, FLOOR - 1.75 + Math.sin(t * 1.3) * 0.05, bz), br = (0.2 * f) / bz;
+      FILM.sets.balloon(ctx, bp[0], bp[1], Math.max(2, br), t, pr(0.28, FLOOR - 0.9, bz), rb * 0.9);
+    }
     // light under the end door
     const u0 = pr(-0.5, FLOOR - 0.02, zE), u1 = pr(0.5, FLOOR, zE);
     const warm = o.doorLight ?? 1;
@@ -265,6 +271,15 @@
         h.at(tt + (tt > 24 ? 0.32 : 0.8), (w) => fx.breath(h, w, { dur: tt > 24 ? 0.4 : 0.8, inhale: false, gain: 0.05, f: 800 }));
       }
       h.at(24, (w) => fx.whoosh(h, w, { dur: 3.6, f1: 150, f2: 1200, gain: 0.12 }));
+      // behind the end door, very far: coffee coming to the boil, a spoon, her clock
+      const far = h.filter('lowpass', 900, 0.7);
+      far.connect(h.in);
+      const farG = h.gain(1);
+      farG.connect(far);
+      h.param(farG.gain, [[0, 0], [7, 0], [20, 0.8], [29, 1], [33.2, 1], [33.3, 0]]);
+      fx.scatter(h, 7, 33.2, 6, 43, (w, k) => fx.bubble(h, w, { size: 0.5 + k * 0.6, gain: 0.02 + k * 0.015, dest: farG }));
+      for (let T = 7.5; T < 33; T += 1) h.at(T, (w) => fx.tick(h, w, { gain: 0.012, pitch: 0.55, dest: farG }));
+      h.at(26.5, (w) => fx.ring(h, w, { f: 2200, partials: [1, 2.4, 3.9], decay: [0.35, 0.2, 0.1], gain: 0.03, dest: farG }));
       // the lights go, one by one
       for (const T of [29.4, 30.1, 30.7, 31.2, 31.7, 32.1, 32.4, 33.2]) {
         h.at(T, (w) => { fx.thud(h, w, { gain: 0.25, f: 60, d: 0.3 }); fx.click(h, w, { gain: 0.15, f: 1800 }); });

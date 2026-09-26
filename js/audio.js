@@ -90,6 +90,9 @@
     A.on = true;
   };
 
+  A.verbIn = (name) => verbs[name];
+  A.output = () => out;
+
   A.toggleMute = () => {
     muted = !muted;
     out.gain.setTargetAtTime(muted ? 0 : 0.9, ac.currentTime, 0.05);

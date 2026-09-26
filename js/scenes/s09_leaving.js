@@ -137,6 +137,40 @@
           shoe: [40, 36, 30], tint: [[214, 214, 210], haze * 0.8],
         }),
       });
+      // a ka'ak seller with his cart
+      people.push({
+        X: -3.9, Z: 10.5, draw: (c, x, y, sc, haze) => {
+          const tint = [[214, 214, 210], haze * 0.8];
+          C.figure(c, { x: x - 0.9 * sc, y: y - 0.49 * 1.72 * sc, h: 1.72 * sc, view: 'front', col: { skin: C.pal.manSkin, shirt: [120, 110, 96], pants: [60, 58, 56], hair: [70, 66, 62] }, shoe: [40, 36, 30], tint });
+          const wood = U.mix([120, 84, 52], [214, 214, 210], haze * 0.8);
+          c.fillStyle = U.rgb(wood);
+          c.fillRect(x - 0.6 * sc, y - 1.0 * sc, 1.3 * sc, 0.45 * sc);
+          c.fillStyle = 'rgb(30,30,30)';
+          for (const wx of [-0.45, 0.55]) { c.beginPath(); c.arc(x + wx * sc, y - 0.2 * sc, 0.2 * sc, 0, 7); c.fill(); }
+          c.strokeStyle = U.rgb(U.mul(wood, 0.7));
+          c.lineWidth = Math.max(1, 0.05 * sc);
+          c.beginPath(); c.moveTo(x - 0.5 * sc, y - 0.55 * sc); c.lineTo(x - 0.45 * sc, y - 0.2 * sc); c.moveTo(x + 0.6 * sc, y - 0.55 * sc); c.lineTo(x + 0.55 * sc, y - 0.2 * sc); c.stroke();
+          // sesame ka'ak rings stacked on the cart
+          c.strokeStyle = U.rgb(U.mix([196, 140, 70], [214, 214, 210], haze * 0.6));
+          c.lineWidth = Math.max(1, 0.06 * sc);
+          for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) {
+            c.beginPath(); c.ellipse(x - 0.42 * sc + i * 0.2 * sc, y - 1.08 * sc - j * 0.12 * sc, 0.1 * sc, 0.05 * sc, 0, 0, 7); c.stroke();
+          }
+        },
+      });
+      // two children on their way to school
+      for (const [kx, kz0, seed] of [[-2.9, 7.5, 0], [-2.4, 8.2, 1]]) {
+        const kz = kz0 + lt * 0.9;
+        const kph = lt * Math.PI * 2 / 0.6 + seed * 1.5, ks = Math.sin(kph);
+        people.push({
+          X: kx, Z: kz, draw: (c, x, y, sc, haze) => C.figure(c, {
+            x, y: y - 0.5 * 1.2 * sc, h: 1.2 * sc, view: 'back', kind: seed ? 'girl' : 'boy', sleeves: 'short',
+            col: seed ? { skin: C.pal.girlSkin, hair: [40, 30, 26], dress: [70, 90, 130], shirt: [70, 90, 130], pants: [70, 90, 130] } : { skin: C.pal.boySkin, shirt: [210, 214, 220], pants: [60, 70, 90], hair: C.pal.hair },
+            backpack: seed ? [120, 90, 150] : [60, 110, 90], shoe: [40, 40, 44],
+            pose: { liftL: Math.max(0, ks), liftR: Math.max(0, -ks), swingL: ks, swingR: -ks }, tint: [[214, 214, 210], haze * 0.8],
+          }),
+        });
+      }
       // a car pulling away down the street
       const cz = U.lerp(9, 90, U.easeIn(U.inv(4.5, 15, lt)));
       if (lt > 4.5 && lt < 15) {

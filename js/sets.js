@@ -4,6 +4,37 @@
   const { U, D, C, W, H } = FILM;
   const S = (FILM.sets = {});
 
+  /* ======================================================== the red balloon */
+  // the only saturated red in the film. end = [x, y] where the string is held (or trails to)
+  S.balloon = function (ctx, x, y, r, t, end, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    if (end) {
+      ctx.strokeStyle = 'rgba(250,240,220,0.7)';
+      ctx.lineWidth = Math.max(1, r * 0.03);
+      ctx.beginPath();
+      ctx.moveTo(x, y + r * 1.15);
+      ctx.bezierCurveTo(x + Math.sin(t * 2) * r * 0.4, y + r * 2, end[0] - Math.sin(t * 1.5) * r * 0.3, end[1] - r, end[0], end[1]);
+      ctx.stroke();
+    }
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.05, x, y, r * 1.1);
+    g.addColorStop(0, 'rgb(255,120,110)');
+    g.addColorStop(0.35, 'rgb(222,24,32)');
+    g.addColorStop(1, 'rgb(120,6,14)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 1.16, Math.sin(t * 1.3) * 0.08, 0, 7);
+    ctx.fill();
+    ctx.fillStyle = 'rgb(150,10,18)';
+    ctx.beginPath(); ctx.moveTo(x - r * 0.1, y + r * 1.22); ctx.lineTo(x + r * 0.1, y + r * 1.22); ctx.lineTo(x, y + r * 1.1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath(); ctx.ellipse(x - r * 0.38, y - r * 0.45, r * 0.16, r * 0.26, -0.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,210,140,0.5)';
+    ctx.lineWidth = Math.max(1, r * 0.06);
+    ctx.beginPath(); ctx.ellipse(x, y, r * 0.97, r * 1.13, 0, -2.6, -1.0); ctx.stroke();
+    ctx.restore();
+  };
+
   /* =============================================================== bedroom */
   const NIGHT = {
     wall: [30, 32, 45], ceil: [22, 24, 34], floor: [15, 16, 21], side: [24, 26, 37],
@@ -15,9 +46,14 @@
     light: [150, 170, 205], out: [96, 116, 146], lamp: [120, 130, 150],
     sheet: [92, 100, 118], blanket: [74, 76, 94], wood: [44, 40, 42], shirt: [70, 76, 88],
   };
-  S.bedPal = (warm) => {
+  const GOLDEN = {
+    wall: [150, 112, 82], ceil: [120, 88, 66], floor: [86, 62, 46], side: [128, 94, 70],
+    light: [255, 196, 120], out: [255, 212, 150], lamp: [255, 214, 150],
+    sheet: [206, 180, 150], blanket: [128, 108, 120], wood: [88, 60, 44], shirt: [70, 72, 80],
+  };
+  S.bedPal = (warm, golden = 0) => {
     const r = {};
-    for (const k in NIGHT) r[k] = U.mix(DAWN[k], NIGHT[k], warm);
+    for (const k in NIGHT) r[k] = U.mix(U.mix(DAWN[k], NIGHT[k], warm), GOLDEN[k], golden);
     return r;
   };
 
@@ -75,7 +111,7 @@
   /* o: warm 0..1, sway, man 'lying'|'sitting'|'none', eye, breath, clock, sweeps [t0...], cam {x,y,z}, blanket 'on'|'thrown' */
   S.bedroom = function (ctx, t, o = {}) {
     const warm = o.warm ?? 1;
-    const P = S.bedPal(warm);
+    const P = S.bedPal(warm, o.golden || 0);
     const lit = (o.lightAmt ?? 1) * (0.35 + 0.65 * warm);
     const sway = U.fbm(t * 0.33, 4) * (o.sway ?? 1);
     ctx.save();
@@ -132,6 +168,11 @@
     ctx.fillRect(545, 272, 22, 49);
     ctx.beginPath(); ctx.arc(583, 285, 7, 0, 7); ctx.fill();
     ctx.fillRect(577, 292, 13, 29);
+    ctx.strokeStyle = U.rgb(U.mul(P.wall, 0.6));
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(589, 296); ctx.lineTo(595, 248); ctx.stroke();
+    ctx.fillStyle = U.rgb(U.mix([170, 40, 40], P.wall, 0.45 + 0.2 * (1 - warm)));
+    ctx.beginPath(); ctx.ellipse(595, 242, 6, 7, 0, 0, 7); ctx.fill();
 
     // window on the right wall
     const wq = WIN;
@@ -152,6 +193,12 @@
       ctx.fillRect(1718 + (i % 3) * 38, 285 + Math.floor(i / 3) * 55, 16, 22);
     }
     D.glow(ctx, 1760, 250, 170, P.lamp, 0.9 * warm + 0.05);
+    // something drifting past outside
+    if (o.windowBalloon) {
+      const wb = o.windowBalloon;
+      const p = quadPt(wq, wb.u, wb.v);
+      S.balloon(ctx, p[0], p[1], wb.r || 22, t, [p[0] + 6, p[1] + (wb.r || 22) * 5]);
+    }
     ctx.restore();
     ctx.strokeStyle = U.rgb(U.mul(P.side, 0.5));
     ctx.lineWidth = 12;

@@ -76,6 +76,11 @@
       eye: 0.8 * blink, tired: 1, worry: 0.35, gaze: [0, 0.05], skin: PALE, shirt: [96, 100, 104],
       light: { dx: 0.8, dy: -0.5, col: LIGHT, amt: 0.22 }, shadow: 0.4, shade: [60, 66, 70], wet: 0.6,
     });
+    // his hand comes up to his cheek, as if to check the face is his
+    const touch = U.win(t, 5.2, 9.6, 1.0, 1.0);
+    if (touch > 0.01) {
+      C.hand(ctx, { x: U.lerp(1220, 1128, touch), y: U.lerp(780, 440, touch), s: 105, rot: -0.12, curl: 0.25, spread: 0.2, thumb: -1.1, skin: PALE, sleeve: [96, 100, 104] });
+    }
     // fog at the mirror's edges, a streak across it
     const g = ctx.createRadialGradient(960, 330, 260, 960, 330, 560);
     g.addColorStop(0, 'rgba(235,240,240,0)');
