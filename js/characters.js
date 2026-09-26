@@ -253,6 +253,7 @@
 
     /* eyes */
     const eyeScale = kind === 'boy' ? 1.18 : kind === 'mother' ? 1.05 : 1;
+    const eyesSeen = [];
     for (const sd of [-1, 1]) {
       const ex = sd * 0.125, ey = -0.045, ez = surfZ(ex, ey) - 0.012;
       const c = P(ex, ey, ez);
@@ -261,6 +262,7 @@
       const fx = Math.sqrt(Math.max(0.02, 1 - n[0] * n[0])), fy = Math.sqrt(Math.max(0.05, 1 - n[1] * n[1]));
       const w = 0.072 * fx * eyeScale, h = 0.03 * fy * eyeScale;
       const vis = U.clamp(n[2] / 0.3);
+      eyesSeen.push({ sd, c, w, h, vis, ex, ey });
       x.save();
       x.globalAlpha = vis;
       // socket
@@ -325,6 +327,15 @@
       x.moveTo(c[0] - w, c[1]);
       x.quadraticCurveTo(c[0] - w * 0.1, lidY, c[0] + w, c[1] - h * 0.1);
       x.stroke();
+      // welling tears: a bright wet line along the lower lid
+      if (o.glisten > 0) {
+        x.strokeStyle = `rgba(235,245,255,${0.55 * o.glisten})`;
+        x.lineWidth = 0.009;
+        x.beginPath();
+        x.moveTo(c[0] - w * 0.85, c[1] + h * 0.1);
+        x.quadraticCurveTo(c[0] + w * 0.1, c[1] + h * 1.35, c[0] + w * 0.9, c[1]);
+        x.stroke();
+      }
       // crease
       x.strokeStyle = U.rgb(U.mul(skin, 0.5), 0.45);
       x.lineWidth = 0.007;
@@ -412,10 +423,14 @@
       x.lineWidth = 0.075;
       x.lineJoin = 'round';
       const band = MASK_R.slice(0, 7).map(([px, py, pz]) => (pz == null ? F(px, py, 0.02) : P(px, py, pz + 0.02)));
-      const full = band.slice().reverse().map((p, i) => p).concat([]);
       const left = MASK_R.slice(1, 7).map(([px, py, pz]) => (pz == null ? F(-px, py, 0.02) : P(-px, py, pz + 0.02)));
-      D.curve(x, left.reverse().concat(band), false);
-      x.stroke();
+      const loop = left.reverse().concat(band);
+      x.lineCap = 'round';
+      for (let i = 0; i < loop.length - 1; i++) {
+        const a = loop[i], b = loop[i + 1];
+        if (a[2] < 0.02 || b[2] < 0.02) continue; // the far side of the band is behind her head
+        x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.stroke();
+      }
       // fold under the chin
       const ch = [P(-0.33, 0.12, 0.1), P(-0.3, 0.36, 0.16), P(0, 0.53, 0.37), P(0.3, 0.36, 0.16), P(0.33, 0.12, 0.1), P(0.46, 0.7, 0.05), P(-0.46, 0.7, 0.05)];
       x.fillStyle = U.rgb(o.scarf || C.pal.scarf);
@@ -490,11 +505,32 @@
       x.fillRect(-2, -2, 4, 4);
     }
     x.restore();
+    // a single tear running down the cheek of the eye nearest the camera
+    if (o.tear > 0 && eyesSeen.length) {
+      const e = eyesSeen.reduce((a, b) => (b.vis > a.vis ? b : a));
+      const len = 0.3 * U.clamp(o.tear);
+      const pts = [];
+      for (let i = 0; i <= 8; i++) {
+        const k = i / 8, py = e.ey + 0.045 + len * k, px = e.ex * (1.02 + 0.12 * k);
+        pts.push(F(px, py, 0.012));
+      }
+      x.strokeStyle = 'rgba(225,238,250,0.45)';
+      x.lineWidth = 0.007;
+      x.lineCap = 'round';
+      x.beginPath();
+      pts.forEach((p, i) => (i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])));
+      x.stroke();
+      const d = pts[pts.length - 1];
+      x.fillStyle = 'rgba(235,245,255,0.8)';
+      x.beginPath(); x.ellipse(d[0], d[1], 0.011, 0.016, 0, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.9)';
+      x.beginPath(); x.arc(d[0] - 0.004, d[1] - 0.005, 0.004, 0, 7); x.fill();
+    }
   }
 
   C.head = function (ctx, opts) {
     const o = Object.assign({
-      x: 0, y: 0, s: 100, yaw: 0, pitch: 0, roll: 0, eye: 1, smile: 0, worry: 0, tired: 0, open: 0, gaze: [0, 0],
+      x: 0, y: 0, s: 100, yaw: 0, pitch: 0, roll: 0, eye: 1, smile: 0, worry: 0, tired: 0, open: 0, gaze: [0, 0], glisten: 0, tear: 0,
       skin: C.pal.manSkin, hair: C.pal.hair, kind: 'man', light: null, shadow: 0.55, shirt: [62, 64, 70], bust: true, alpha: 1,
     }, opts);
     const b = FILM.buffer('__head', false);

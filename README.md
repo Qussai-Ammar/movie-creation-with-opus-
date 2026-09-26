@@ -26,7 +26,7 @@ URL options:
 - `?t=120` starts at 120 s.
 - `?t=120&still` renders one frame with no audio (used for testing).
 
-## The film (≈ 5 min 32 s)
+## The film (≈ 5 min 48 s)
 
 | # | Scene | Length | What happens |
 |---|---|---|---|
@@ -36,8 +36,8 @@ URL options:
 | 3 | Drowning | 34 s | Fully dressed, he rises toward the light and is pulled down: wide shot, the reaching hand, a stuttering repeat, then sinking into the abyss |
 | 4 | The endless corridor | 34 s | Bare feet on terrazzo; doors stretch apart; the end door recedes (dolly zoom); flickering tubes die one by one |
 | 5 | The coffee cup | 30 s | A small finjan spins, grows, gives chase and spills coffee upward like black rain; the camera falls into it |
-| 6 | Mother and childhood | 40 s | A golden kitchen, coffee in a brass rakweh, a boy in the doorway, the man watching from the dark, her smile, the gold fading before he can reach it |
-| 7 | Waking before dawn | 22 s | He wakes with a jolt; the room is cold blue-gray; he sits hunched on the edge of the bed at 04:52 |
+| 6 | Mother and childhood | 46 s | A golden kitchen, remembered through drifting light leaks; coffee in a brass rakweh; the boy turns and looks straight at the man he will become; she strokes the boy's hair, then lifts her eyes to the man and smiles; he reaches, and the memory closes on him like a door, with a muffled thud and a second of total silence |
+| 7 | Waking before dawn | 32 s | A white flash; his eye snaps open while split-second flashes of the four nightmares break in; he bolts upright, panting; the clock turns 04:51 → 04:52 and the fridge shudders off; one tear; the old photo of his mother and him on the wall glows once as his fingertips touch the glass; stillness on the edge of the bed |
 | 8 | Morning routine | 26 s | The mirror, a tired and pale face, a paracetamol, a glass of water |
 | 9 | Leaving home | 26 s | Stairwell; the street wakes up: shutters, a car, birds, his footsteps going away |
 | 10 | The red balloon | 30 s | Golden afternoon; a boy near the entrance lets go of a red balloon; the man stops and looks up |

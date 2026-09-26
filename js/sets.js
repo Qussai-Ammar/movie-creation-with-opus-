@@ -269,6 +269,20 @@
       }
       // light across the blanket
       S.lightQuad(ctx, [[820 + sway * 10, 440], [1110 + sway * 14, 436], [1140, 560], [850, 566]], P.light, 0.08 * lit);
+    } else if (o.man === 'custom') {
+      ctx.fillStyle = U.rgb(U.mul(P.sheet, 1.3));
+      D.curve(ctx, [[400, 470], [480, 452], [585, 462], [590, 492], [480, 500], [405, 496]]);
+      ctx.fill();
+      o.drawMan(ctx, P);
+      // blanket over his legs
+      ctx.fillStyle = U.rgb(P.blanket);
+      D.curve(ctx, [[600, 500], [640, 462], [760, 452], [880, 460], [980, 446], [1100, 452], [1200, 468], [1228, 560], [900, 575], [600, 560]]);
+      ctx.fill();
+      ctx.strokeStyle = U.rgb(U.mul(P.blanket, 0.65), 0.8);
+      ctx.lineWidth = 3;
+      for (const [a, b] of [[[720, 470], [780, 540]], [[900, 470], [860, 540]], [[1040, 462], [1090, 530]]]) {
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(a[0] + 30, (a[1] + b[1]) / 2, b[0], b[1]); ctx.stroke();
+      }
     } else if (o.man === 'sitting') {
       // pillow pushed aside, blanket thrown back
       ctx.fillStyle = U.rgb(U.mul(P.sheet, 1.25));
