@@ -68,9 +68,9 @@
     return c;
   }
 
-  A.init = () => {
-    if (ac) return;
-    ac = new (window.AudioContext || window.webkitAudioContext)();
+  // build the output chain, noise and reverbs on a context (live or offline)
+  function setup(context) {
+    ac = context;
     A.ac = ac;
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3.5;
@@ -87,6 +87,11 @@
     verbs.hall = makeVerb(4.2, 2.1, 0.25, 0.8);
     verbs.dream = makeVerb(6.5, 1.6, 0.7, 0.9);
     verbs.street = makeVerb(2.2, 3.5, 0.3, 0.55);
+  }
+
+  A.init = () => {
+    if (ac) return;
+    setup(new (window.AudioContext || window.webkitAudioContext)());
     A.on = true;
   };
 
@@ -148,14 +153,14 @@
       s.buffer = buffers[color];
       s.loop = true;
       s.playbackRate.value = rate;
-      s.start(ac.currentTime, Math.random() * 5);
+      s.start(Math.max(ac.currentTime, this.base - 0.05), Math.random() * 5);
       return this.track(s);
     }
     osc(type, f) {
       const o = ac.createOscillator();
       o.type = type;
       o.frequency.value = f;
-      o.start(ac.currentTime);
+      o.start(Math.max(ac.currentTime, this.base - 0.05));
       return this.track(o);
     }
     chain(...n) { for (let i = 0; i < n.length - 1; i++) n[i].connect(n[i + 1]); return n[n.length - 1]; }
@@ -215,6 +220,64 @@
       }
       if (h) h.pump();
     }
+  };
+
+  /* ------------------------------------------------------- offline render */
+  // Render the whole soundtrack, faster than real time, for export. Every scene's audio is laid out on one timeline.
+  A.renderOffline = async (sampleRate = 48000) => {
+    const total = FILM.total;
+    const off = new OfflineAudioContext(2, Math.ceil((total + 1) * sampleRate), sampleRate);
+    setup(off);
+    A.on = true;
+    t0 = 0;
+    for (const s of FILM.list) {
+      if (!s.audio) continue;
+      const h = new Handle(s, 0, 0);
+      const tail = s.audioTail ?? 2.5;
+      h.param(h.env.gain, [[0, 0], [s.audioIn ?? 0.8, 1], [s.dur, 1], [s.dur + tail, 0]]);
+      try { s.audio(h, FX); } catch (e) { console.error('audio', s.name, e); }
+      // the scene's continuous layers end with the scene
+      const end = h.T(s.dur + tail + 0.3);
+      for (const n of h.nodes) { try { n.stop(end); } catch (e) { /* one-shot with its own stop */ } }
+      h.events.sort((a, b) => a.T - b.T);
+      for (const e of h.events) { try { e.fn(h.T(e.T)); } catch (err) { console.error(err); } }
+    }
+    return off.startRendering();
+  };
+
+  // Render one scene's audio on its own (scene-local time 0 = sample 0), so scenes can render in parallel.
+  A.renderScene = async (index, sampleRate = 48000) => {
+    const s = FILM.list[index];
+    if (!s || !s.audio) return null;
+    const tail = s.audioTail ?? 2.5;
+    const len = s.dur + tail + 7; // room for the long reverbs to ring out
+    const off = new OfflineAudioContext(2, Math.ceil(len * sampleRate), sampleRate);
+    setup(off);
+    A.on = true;
+    t0 = -s.start;
+    const h = new Handle(s, 0, t0);
+    h.param(h.env.gain, [[0, 0], [s.audioIn ?? 0.8, 1], [s.dur, 1], [s.dur + tail, 0]]);
+    try { s.audio(h, FX); } catch (e) { console.error('audio', s.name, e); }
+    const end = h.T(s.dur + tail + 0.3);
+    for (const n of h.nodes) { try { n.stop(end); } catch (e) { /* one-shot with its own stop */ } }
+    h.events.sort((a, b) => a.T - b.T);
+    for (const e of h.events) { try { e.fn(h.T(e.T)); } catch (err) { console.error(err); } }
+    return off.startRendering();
+  };
+
+  // 16-bit PCM WAV from an AudioBuffer
+  A.toWav = (buf) => {
+    const n = buf.length, ch = buf.numberOfChannels, sr = buf.sampleRate;
+    const data = new DataView(new ArrayBuffer(44 + n * ch * 2));
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) data.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); data.setUint32(4, 36 + n * ch * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    data.setUint32(16, 16, true); data.setUint16(20, 1, true); data.setUint16(22, ch, true);
+    data.setUint32(24, sr, true); data.setUint32(28, sr * ch * 2, true); data.setUint16(32, ch * 2, true); data.setUint16(34, 16, true);
+    str(36, 'data'); data.setUint32(40, n * ch * 2, true);
+    const chans = []; for (let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+    let o = 44;
+    for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { const v = Math.max(-1, Math.min(1, chans[c][i])); data.setInt16(o, v < 0 ? v * 0x8000 : v * 0x7fff, true); o += 2; }
+    return new Blob([data.buffer], { type: 'audio/wav' });
   };
 
   /* ----------------------------------------------------------- sound kit */

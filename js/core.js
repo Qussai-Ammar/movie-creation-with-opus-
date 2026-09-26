@@ -53,6 +53,8 @@
   /* ---------------------------------------------------------------- params */
   const params = new URLSearchParams(location.search);
   const Q = (FILM.q = U.clamp(parseFloat(params.get('q')) || 0.75, 0.25, 2));
+  // film-grain strength (export uses a softer grain so the video compresses well)
+  const GRAIN = U.clamp(parseFloat(params.get('grain')) || 1, 0, 2);
 
   /* --------------------------------------------------------------- drawing */
   const D = (FILM.D = {});
@@ -298,7 +300,7 @@
       const f = Math.floor(t * 24);
       const g = grains[f % grains.length];
       ctx.globalCompositeOperation = 'overlay';
-      ctx.globalAlpha = P.grain * 2.2;
+      ctx.globalAlpha = P.grain * 2.2 * GRAIN;
       const ox = (U.hash(f) * 40) | 0, oy = (U.hash(f + 7) * 40) | 0;
       ctx.drawImage(g, -ox, -oy, canvas.width + 40, canvas.height + 40);
     }
