@@ -1,4 +1,4 @@
-/* Scene 11 — Final moment. He looks at the balloon and smiles for the first time. He opens his hand and
+/* Scene 12 — Final moment. He looks at the balloon and smiles for the first time. He opens his hand and
    lets it go: in the memory it slipped away; now he chooses. Home. The door closes softly.
    The same bedroom as the first shot — golden now — and the red balloon passing the window. */
 (function () {
@@ -103,7 +103,7 @@
   }
 
   FILM.scene({
-    order: 11, num: 11, name: 'Final moment', dur: 40,
+    order: 11, num: 12, name: 'Final moment', dur: 40,
     fadeOut: 4,
     post: (t) => ({ grain: 0.07, vignette: t > 24 && t < 31 ? 0.6 : 0.4 }),
     draw(ctx, t) {
@@ -171,7 +171,7 @@
           const z = U.ss(0.9, 3.2, lt);
           C.figure(ctx, {
             x: U.lerp(960, 1300, z), y: U.lerp(410, 470, z), h: U.lerp(520, 760, z), view: 'front', pose: { liftL: Math.max(0, Math.sin(lt * 6)), liftR: Math.max(0, -Math.sin(lt * 6)) },
-            col: OUT, shoe: [30, 26, 24], tint: [[20, 16, 16], 0.75], rim: { col: GOLD, dx: 0, dy: -2 }, alpha: 1 - U.ss(3.4, 4.3, lt),
+            col: OUT, shoe: [30, 26, 24], tint: [[40, 30, 26], 0.25], rim: { col: GOLD, dx: 0, dy: -2, a: 0.5 }, alpha: 1 - U.ss(3.4, 4.3, lt),
           });
         }
         doorLeaf(ctx, f, open);
@@ -209,25 +209,54 @@
     },
   });
 
-  // end card
+  // ending: the title, a dedication, and a note on how the film was made
+  const AR = 'Amiri, "Noto Naskh Arabic", "Geeza Pro", "Arial", serif';
   FILM.scene({
-    order: 12, name: 'End', dur: 16,
+    order: 12, name: 'End', dur: 25,
     post: { grain: 0.05, vignette: 0 },
     draw(ctx, t) {
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, W, H);
-      const a = U.win(t, 1, 12, 2, 3);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(214,204,190,${a * 0.88})`;
-      ctx.font = '300 38px Georgia, "Times New Roman", serif';
-      ctx.fillText('O N E   N I G H T', W / 2, H / 2 - 24);
-      ctx.fillStyle = `rgba(214,204,190,${a * 0.7})`;
-      ctx.font = '400 30px "Noto Naskh Arabic", "Geeza Pro", "Arial", serif';
-      ctx.fillText('ليلة واحدة', W / 2, H / 2 + 34);
-      // a small red balloon, far up
-      const b = U.win(t, 3, 12, 2, 3);
-      S.balloon(ctx, W / 2 + 190, U.lerp(H / 2 - 10, H / 2 - 60, t / 16), 7, t, [W / 2 + 192, U.lerp(H / 2 + 26, H / 2 - 24, t / 16)], b * 0.85);
+      // حنين
+      const a = U.win(t, 0.8, 7.6, 1.8, 1.4);
+      if (a > 0) {
+        ctx.fillStyle = `rgba(232,222,206,${a})`;
+        ctx.font = `400 130px ${AR}`;
+        ctx.direction = 'rtl';
+        ctx.fillText('حنين', W / 2, H / 2 - 20);
+        ctx.fillStyle = `rgba(214,204,190,${a * 0.6})`;
+        ctx.font = '300 18px Georgia, "Times New Roman", serif';
+        ctx.direction = 'ltr';
+        ctx.fillText('H A N E E N', W / 2, H / 2 + 88);
+        S.balloon(ctx, W / 2 + 170, U.lerp(H / 2 - 40, H / 2 - 110, t / 8), 9, t, [W / 2 + 172, U.lerp(H / 2 + 5, H / 2 - 65, t / 8)], a * 0.9);
+      }
+      // the dedication
+      const b = U.win(t, 8.2, 16.4, 1.6, 1.4);
+      if (b > 0) {
+        ctx.fillStyle = `rgba(232,222,206,${b * 0.95})`;
+        ctx.font = `400 46px ${AR}`;
+        ctx.direction = 'rtl';
+        ctx.fillText('إلى البالون الذي يبحث عنه كل طفل،', W / 2, H / 2 - 34);
+        ctx.direction = 'rtl';
+        ctx.fillText('وكل من كان يومًا طفلًا.', W / 2, H / 2 + 38);
+      }
+      // disclaimer, last
+      const c = U.win(t, 17.0, 24.8, 1.2, 1.6);
+      if (c > 0) {
+        ctx.fillStyle = `rgba(200,192,180,${c * 0.85})`;
+        ctx.font = `400 30px ${AR}`;
+        ctx.direction = 'rtl';
+        ctx.fillText('أُنتج هذا الفيلم بالكامل باستخدام الذكاء الاصطناعي — Claude من Anthropic.', W / 2, H / 2 - 30);
+        ctx.font = `400 24px ${AR}`;
+        ctx.fillStyle = `rgba(200,192,180,${c * 0.6})`;
+        ctx.direction = 'rtl';
+        ctx.fillText('كل صورة وكل صوت وكل نغمة فيه كُتبت بالكود.', W / 2, H / 2 + 22);
+        ctx.font = '300 20px Georgia, "Times New Roman", serif';
+        ctx.direction = 'ltr';
+        ctx.fillText('Made entirely with AI (Claude by Anthropic). Every image, sound and note was written in code.', W / 2, H / 2 + 70);
+      }
     },
   });
 })();

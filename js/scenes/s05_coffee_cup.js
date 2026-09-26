@@ -68,6 +68,8 @@
     ctx.restore();
   }
 
+  FILM.sets.finjan = cup;
+
   function voidBg(ctx, t, scroll = 0) {
     const g = ctx.createRadialGradient(960, 380, 50, 960, 402, 1100);
     g.addColorStop(0, 'rgb(26,20,22)');

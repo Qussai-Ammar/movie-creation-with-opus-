@@ -421,7 +421,7 @@
         else document.documentElement.requestFullscreen().catch(() => {});
       } else if (k === 'm' || k === 'M') { if (A() && A().on) A().toggleMute(); }
       else {
-        const map = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 0: 10, '-': 11 };
+        const map = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 0: 10, '-': 11, '=': 12 };
         if (k in map) { const s = FILM.list.find((x) => x.num === map[k]); if (s) setTime(s.start); }
         else if (k === 'Home') setTime(0);
         else return;

@@ -285,7 +285,24 @@
       for (let T = 10; T < 25.5; T += 0.5, i++) note(h, b, T, 'oud', pat[i % pat.length], 0.35, { gain: 0.1 + 0.04 * (i % 4 === 0), bright: 0.45 });
       pad(h, b, 10, ['D3', 'A3', 'C4', 'E4'], 15, { gain: 0.04, a: 3, r: 2, cut: 900 });
     },
-    10(h) { // the girl: warmth, then the theme on oud as she holds it up to him; it turns major as he takes it
+    10(h) { // work: the corridor's two notes return, quicken as the pile grows, and sink into the sea's drone
+      const b = bus(h, 0.55, 'hall', 0.45);
+      note(h, b, 4.6, 'cello', 'D2', 4.5, { gain: 0.06, a: 1.2 });
+      pad(h, b, 4.6, ['A3', 'Bb3', 'D4'], 4.4, { gain: 0.04, a: 1.5, r: 1, trem: 6, cut: 1400 });
+      let T = 9.8, i = 0;
+      while (T < 25.3) {
+        note(h, b, T, 'piano', i % 2 ? 'Bb3' : 'A3', 0.35, { gain: 0.05 + 0.05 * U.inv(9.8, 25, T) });
+        T += U.lerp(0.55, 0.3, U.inv(15, 25, T));
+        i++;
+      }
+      pad(h, b, 15.5, 'lowD', 10, { gain: 0.05, a: 3, r: 1, cut: 500 });
+      at(h, 25.3, (w) => ins.cello(h, b, w, N('D1') * 2, 4, { gain: 0.09, a: 1.5, r: 0.2, cut: 300 }));
+      pad(h, b, 25.3, 'cluster', 3.9, { gain: 0.1, a: 2.5, r: 0.1, cut: 700 });
+      for (let T2 = 25.6; T2 < 29.2; T2 += 0.8) note(h, b, T2, 'thump', 'D1', 0.5, { gain: 0.14 });
+      // after: one soft chord, the afternoon
+      pad(h, b, 30.2, 'F', 3.8, { gain: 0.05, a: 1.5, r: 2 });
+    },
+    11(h) { // the girl: warmth, then the theme on oud as she holds it up to him; it turns major as he takes it
       const b = bus(h, 0.9, 'street', 0.45);
       pad(h, b, 8.5, 'F', 7, { gain: 0.09, a: 2.5, r: 2, cut: 1000 });
       phrase(h, b, 15.6, 0.6, [['A4', 2], ['F4', 1], ['E4', 1], ['D4', 2], [null, 1], ['E4', 1], ['F4', 1], ['G4', 1]], 'oud', { gain: 0.2 });
@@ -296,7 +313,7 @@
       pad(h, b, 26, 'F', 6, { gain: 0.06, a: 1.5, r: 2.5 });
       phrase(h, b, 26.4, 0.6, [['C5', 1], ['A4', 1], ['F4', 2], ['G4', 1], ['A4', 3]], 'ney', { gain: 0.07 });
     },
-    11(h) { // the smile: the first major chord of the film; the theme in Ajam; release; home; rest
+    12(h) { // the smile: the first major chord of the film; the theme in Ajam; release; home; rest
       const b = bus(h, 0.85, 'hall', 0.45);
       pad(h, b, 2.3, 'D', 5, { gain: 0.08, a: 2.2, r: 2 });
       phrase(h, b, 2.8, 0.6, [['A4', 2], ['F#4', 1], ['E4', 1], ['D4', 3]], 'oud', { gain: 0.22 });
@@ -314,17 +331,23 @@
       pad(h, b, 34, 'D', 6, { gain: 0.11, a: 1.5, r: 4 });
       phrase(h, b, 31.5, 0.7, [['B4', 1], ['A4', 1], ['F#4', 2], ['E4', 1], ['F#4', 1], ['D4', 4]], 'piano', { gain: 0.12 });
     },
-    12(h) { // end card: the theme once more, in major
-      const b = bus(h, 1.0, 'hall', 0.45);
+    end(h) { // end card: the theme once more, in major
+      const b = bus(h, 0.62, 'hall', 0.45);
       ['D', 'Bm', 'G', 'A'].forEach((c, i) => pad(h, b, 0.4 + i * 3.4, c, 3.6, { gain: 0.08, a: 1.2, r: 2 }));
       phrase(h, b, 0.8, 0.6, HOPE_A, 'oud', { gain: 0.2 });
       phrase(h, b, 0.8, 0.6, HOPE_A, 'ney', { gain: 0.05, oct: 1 });
+      // under the dedication: the theme's answer, alone on the ney
+      pad(h, b, 14, 'G', 4, { gain: 0.06, a: 1.5, r: 1.5 });
+      phrase(h, b, 14.4, 0.62, HOPE_B, 'ney', { gain: 0.08 });
+      // and the home chord, held to the end
+      pad(h, b, 18, 'D', 5.5, { gain: 0.07, a: 2, r: 3, cut: 800 });
+      note(h, b, 18.3, 'oud', 'D4', 3, { gain: 0.14 });
     },
   };
 
   // attach cues to the scenes' own audio
   for (const s of FILM.list) {
-    const key = s.num ?? (s.order === 0 ? 0 : s.order === 12 ? 12 : null);
+    const key = s.num ?? (s.order === 0 ? 0 : s.name === 'End' ? 'end' : null);
     const cue = CUES[key];
     if (!cue) continue;
     const own = s.audio;
@@ -332,7 +355,7 @@
       if (own) own(h, fx);
       try { cue(h, M); } catch (e) { console.error('music', s.name, e); }
     };
-    if (key === 12) s.audioTail = 4;
+    if (key === 'end') s.audioTail = 4;
   }
   M.ins = ins;
 })();

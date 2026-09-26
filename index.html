@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>One Night</title>
+<title>حنين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap">
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
   body.idle { cursor: none; }
@@ -16,7 +19,9 @@
     color: #cfc6b8; background: #000; cursor: pointer; transition: opacity 1.4s ease; font-family: Georgia, 'Times New Roman', serif;
   }
   #start.gone { opacity: 0; pointer-events: none; }
-  #start h1 { font-weight: normal; letter-spacing: .7em; padding-left: .7em; font-size: clamp(22px, 4vw, 46px); margin: 0 0 1.4em; }
+  #start h1 { font-family: Amiri, 'Noto Naskh Arabic', 'Geeza Pro', serif; font-weight: normal; font-size: clamp(40px, 7vw, 84px); margin: 0 0 .1em; }
+  #start .en { font-family: Georgia, serif; letter-spacing: .6em; padding-left: .6em; font-size: 12px; opacity: .6; margin: 0 0 1.2em; }
+  #start .by { font-family: Amiri, 'Noto Naskh Arabic', serif; font-size: 18px; letter-spacing: 0; text-transform: none; opacity: .7; margin: 0 0 2.2em; }
   #start p { font-family: system-ui, sans-serif; font-size: 12px; letter-spacing: .25em; text-transform: uppercase; opacity: .5; margin: .45em; }
   #start .go { opacity: .85; border: 1px solid rgba(207, 198, 184, .35); padding: .9em 2.2em; margin-bottom: 1.6em; }
 
@@ -40,11 +45,13 @@
 <div id="hud">
   <div id="row"><span id="scn"></span><span id="tm"></span></div>
   <div id="bar"><div class="track"></div><div class="fill"></div></div>
-  <div id="keys">space play / pause · ← → seek 5 s · 1–9, 0, − jump to scene · F fullscreen · M mute</div>
+  <div id="keys">space play / pause · ← → seek 5 s · 1–9, 0, −, = jump to scene · F fullscreen · M mute</div>
 </div>
 
 <div id="start">
-  <h1>ONE NIGHT</h1>
+  <h1>حنين</h1>
+  <p class="en">HANEEN</p>
+  <p class="by" dir="rtl">فيلم من إخراج قصي أنس</p>
   <p class="go">click to begin</p>
   <p>no dialogue · original score</p>
   <p>headphones recommended</p>
@@ -64,6 +71,7 @@
 <script src="js/scenes/s07_waking.js"></script>
 <script src="js/scenes/s08_bathroom.js"></script>
 <script src="js/scenes/s09_leaving.js"></script>
+<script src="js/scenes/s09b_work.js"></script>
 <script src="js/scenes/s10_balloon.js"></script>
 <script src="js/scenes/s11_final.js"></script>
 <script src="js/music.js"></script>

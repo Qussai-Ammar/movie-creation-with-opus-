@@ -94,7 +94,8 @@
     // his fingertips come to rest on the glass
     const r = U.easeOut(U.inv(3.0, 4.4, lt));
     if (r > 0) {
-      C.hand(ctx, { x: U.lerp(1500, 1180, r), y: U.lerp(1000, 610, r), s: 190, rot: -0.55, curl: 0.15, spread: 0.3, thumb: -1.3, skin: SKIN, sleeve: [60, 66, 78] });
+      C.hand(ctx, { x: U.lerp(1500, 1180, r), y: U.lerp(1000, 610, r), s: 190, rot: -0.55, curl: 0.15, spread: 0.3, thumb: -1.3, skin: SKIN, sleeve: U.mul(SKIN, 0.82) });
+      if (r > 0.05) { ctx.save(); ctx.globalCompositeOperation = 'screen'; D.glow(ctx, U.lerp(1500, 1180, r) + 60, U.lerp(1000, 610, r) + 120, 260, [150, 172, 205], 0.12 * r); ctx.restore(); }
     }
   }
 
@@ -129,7 +130,7 @@
           warm: 0, man: 'custom', clock: '04:51', sway: 0.4,
           cam: { x: 760 + sx, y: 420 + sy, z: 1.3 + lt * 0.012 },
           drawMan: (c, P) => C.figure(c, {
-            x: 640, y: 492, h: 560, facing: 1, sleeves: 'short',
+            x: 650, y: 492, h: 560, facing: 1, sleeves: 'short',
             pose: {
               torso: U.lerp(-1.42, 0.12 + 0.3 * toFace, up) + pant, neck: U.lerp(0.1, -0.1 + 0.45 * toFace, up), head: 0.1 * toFace,
               sL: U.lerp(0.4, -0.35, up) * (1 - toFace) + 0.5 * toFace, eL: U.lerp(0.2, 0.1, up) * (1 - toFace) + 2.15 * toFace,

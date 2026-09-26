@@ -93,7 +93,7 @@
     const kind = o.kind;
     const child = kind === 'boy' || kind === 'girl';
     // children: features sit lower on a rounder face, the nose is small
-    const kidY = child ? 0.035 : 0;
+    const kidY = kind === 'girl' ? 0.055 : child ? 0.035 : 0;
     const pathPts = (pts) => { x.beginPath(); x.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) x.lineTo(pts[i][0], pts[i][1]); x.closePath(); };
 
     // skull silhouette (rotated ellipsoid, approximated)
@@ -121,6 +121,11 @@
       D.curve(x, [P(-0.2, 0.7 * by, 0), P(-sw * 0.8, 0.84 * by, -0.05), P(-sw, 1.05 * by, -0.1), P(-sw * 1.05, 1.7, -0.1),
         P(sw * 1.05, 1.7, -0.1), P(sw, 1.05 * by, -0.1), P(sw * 0.8, 0.84 * by, -0.05), P(0.2, 0.7 * by, 0)]);
       x.fill();
+      if (kind === 'girl') {
+        // her white collar
+        x.fillStyle = 'rgb(246,244,236)';
+        for (const sd of [-1, 1]) { const c = P(sd * 0.1, 0.7 * by, 0.12); x.beginPath(); x.ellipse(c[0], c[1], 0.13, 0.06, sd * 0.35, 0, 7); x.fill(); }
+      }
       // collar shadow
       const cl = P(0, 0.72 * by, 0.08);
       x.fillStyle = U.rgb(U.mul(skin, 0.7));
@@ -265,7 +270,7 @@
     x.fill();
 
     /* eyes */
-    const eyeScale = child ? 1.2 : kind === 'mother' ? 1.05 : 1;
+    const eyeScale = kind === 'girl' ? 1.32 : child ? 1.2 : kind === 'mother' ? 1.05 : 1;
     const eyesSeen = [];
     for (const sd of [-1, 1]) {
       const ex = sd * 0.125, ey = -0.045 + kidY, ez = surfZ(ex, ey) - 0.012;
@@ -510,6 +515,16 @@
         x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.stroke();
       }
       if (kind === 'girl') {
+        // a yellow hairband over the crown
+        const band = [];
+        for (let i = 0; i <= 12; i++) { const px = -0.37 + i * 0.0617; const py = -0.47 + (px / 0.37) ** 2 * 0.2; band.push(P(px, py, surfZ(px * 0.97, py) + 0.035)); }
+        x.strokeStyle = 'rgb(236,188,64)';
+        x.lineWidth = 0.075;
+        x.lineCap = 'round';
+        for (let i = 0; i < band.length - 1; i++) {
+          if (band[i][2] < 0 || band[i + 1][2] < 0) continue;
+          x.beginPath(); x.moveTo(band[i][0], band[i][1]); x.lineTo(band[i + 1][0], band[i + 1][1]); x.stroke();
+        }
         // locks falling past her cheeks
         x.strokeStyle = U.rgb(hair);
         x.lineWidth = 0.07;
@@ -599,7 +614,7 @@
     x.translate(o.x, o.y);
     x.rotate(o.roll);
     x.scale(o.s, o.s);
-    if (o.kind === 'boy' || o.kind === 'girl') x.scale(1.1, 0.88); // a child's rounder, shorter face
+    if (o.kind === 'boy' || o.kind === 'girl') x.scale(o.kind === 'girl' ? 1.14 : 1.1, o.kind === 'girl' ? 0.85 : 0.88); // a child's rounder, shorter face
     drawHead(x, o);
     x.restore();
     ctx.save();
@@ -700,7 +715,7 @@
       if (o.sleeves === 'short') {
         line(sh, a.el, 0.05 * h, cc(col.skin));
         line(a.el, a.wr, 0.044 * h, cc(col.skin));
-        line(sh, add(sh, [(a.el[0] - sh[0]) * 0.5, (a.el[1] - sh[1]) * 0.5]), 0.066 * h, cc(col.shirt));
+        line(sh, add(sh, [(a.el[0] - sh[0]) * 0.45, (a.el[1] - sh[1]) * 0.45]), (kind === 'girl' ? 0.085 : 0.066) * h, cc(kind === 'girl' ? col.dress : col.shirt));
       } else {
         line(sh, a.el, 0.058 * h, cc(col.shirt));
         line(a.el, a.wr, 0.05 * h, cc(col.shirt));
@@ -732,19 +747,33 @@
       line(Lg.ank, Lg.toe, 0.038 * h, U.rgb(shoe || col.skin));
     } else if (kind === 'girl') {
       drawLeg(Lg, false);
-      // a knee-length dress
-      const kneeY = Math.max(Lg.knee[1], Rg.knee[1]) + 0.02 * h;
-      const midX = (Lg.knee[0] + Rg.knee[0]) / 2;
+      // a child's dress: fitted bodice, sash, a skirt that flares to just above the knee
+      const waist = add(hip, up(p.torso, 0.07 * h));
+      const hemY = Math.min(Lg.knee[1], Rg.knee[1]) - 0.01 * h;
+      const midX = (Lg.knee[0] + Rg.knee[0] + 2 * hip[0]) / 4;
       x.fillStyle = U.rgb(col.dress);
-      D.curve(x, [add(sh, [-d * 0.05 * h, 0]), add(sh, [d * 0.055 * h, 0.01 * h]), add(hip, [d * 0.07 * h, -0.04 * h]),
-        [midX + d * 0.12 * h, kneeY], [midX - d * 0.11 * h, kneeY], add(hip, [-d * 0.07 * h, -0.04 * h])]);
+      D.curve(x, [add(waist, [-d * 0.06 * h, 0]), add(waist, [d * 0.065 * h, 0]), [midX + d * 0.17 * h, hemY + 0.01 * h], [midX, hemY + 0.025 * h], [midX - d * 0.16 * h, hemY + 0.01 * h]]);
       x.fill();
-      x.strokeStyle = U.rgb(U.mul(col.dress, 0.75), 0.7);
+      D.curve(x, [add(sh, [-d * 0.05 * h, -0.005 * h]), add(sh, [d * 0.05 * h, 0.005 * h]), add(waist, [d * 0.065 * h, 0.01 * h]), add(waist, [-d * 0.06 * h, 0.01 * h])]);
+      x.fill();
+      // skirt folds and a white hem
+      x.strokeStyle = U.rgb(U.mul(col.dress, 0.72), 0.8);
       x.lineWidth = 0.006 * h;
-      for (const f of [-0.05, 0.02, 0.08]) {
-        const a = add(hip, [d * f * h, 0.02 * h]);
-        x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(midX + d * f * 1.6 * h, kneeY - 0.01 * h); x.stroke();
+      for (const f of [-0.08, -0.02, 0.04, 0.1]) {
+        x.beginPath(); x.moveTo(waist[0] + d * f * 0.5 * h, waist[1] + 0.02 * h); x.lineTo(midX + d * f * 1.4 * h, hemY); x.stroke();
       }
+      x.strokeStyle = 'rgba(248,246,238,0.95)';
+      x.lineWidth = 0.012 * h;
+      x.beginPath(); x.moveTo(midX - d * 0.155 * h, hemY + 0.008 * h); x.quadraticCurveTo(midX, hemY + 0.03 * h, midX + d * 0.165 * h, hemY + 0.008 * h); x.stroke();
+      // sash
+      x.strokeStyle = U.rgb(U.mix(col.dress, [255, 255, 255], 0.55));
+      x.lineWidth = 0.022 * h;
+      x.beginPath(); x.moveTo(waist[0] - d * 0.06 * h, waist[1]); x.lineTo(waist[0] + d * 0.065 * h, waist[1]); x.stroke();
+      x.fillStyle = U.rgb(U.mix(col.dress, [255, 255, 255], 0.55));
+      x.beginPath(); x.ellipse(waist[0] - d * 0.07 * h, waist[1] + 0.015 * h, 0.02 * h, 0.03 * h, d * 0.4, 0, 7); x.fill();
+      // white collar
+      x.fillStyle = 'rgb(248,246,238)';
+      x.beginPath(); x.ellipse(sh[0] + d * 0.02 * h, sh[1] + 0.012 * h, 0.035 * h, 0.018 * h, 0, 0, 7); x.fill();
     } else {
       x.strokeStyle = U.rgb(col.pants);
       x.lineWidth = 0.1 * h;
@@ -806,11 +835,14 @@
         x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.4, hd[1] + hr * 0.6, hr * 0.55, hr * 0.42, 0, 0, Math.PI * 2); x.fill();
       }
       if (kind === 'girl') {
-        // hair falling down her back
+        // hair to her shoulders, a yellow band across the top
         x.fillStyle = U.rgb(col.hair);
-        D.curve(x, [add(hd, [-fwd[0] * hr * 0.2, -hr * 0.9]), add(hd, [-fwd[0] * hr * 1.05, -hr * 0.2]), add(hd, [-fwd[0] * hr * 1.15, hr * 1.2]),
-          add(sh, [-d * 0.05 * h, 0.05 * h]), add(sh, [-d * 0.01 * h, 0.03 * h]), add(hd, [-fwd[0] * hr * 0.1, hr * 0.5])]);
+        D.curve(x, [add(hd, [-fwd[0] * hr * 0.2, -hr * 0.95]), add(hd, [-fwd[0] * hr * 1.08, -hr * 0.2]), add(hd, [-fwd[0] * hr * 1.1, hr * 1.1]),
+          add(hd, [-fwd[0] * hr * 0.55, hr * 1.35]), add(hd, [-fwd[0] * hr * 0.05, hr * 0.5])]);
         x.fill();
+        x.strokeStyle = 'rgb(240,196,70)';
+        x.lineWidth = hr * 0.18;
+        x.beginPath(); x.arc(hd[0] - fwd[0] * hr * 0.1, hd[1] - hr * 0.05, hr * 0.98, Math.PI * 1.15, Math.PI * 1.75); x.stroke();
       }
       // eye and brow when the figure is big enough to read them
       if (h > 220) {
@@ -867,8 +899,19 @@
       }
     } else if (kind === 'girl') {
       x.fillStyle = U.rgb(col.dress);
-      D.curve(x, [[-shW * 0.9, sh[1]], [shW * 0.9, sh[1]], [hipW * 1.1, hip[1] - 0.03 * h], [hipW * 1.9, hip[1] + legLen * 0.48], [-hipW * 1.9, hip[1] + legLen * 0.48], [-hipW * 1.1, hip[1] - 0.03 * h]]);
+      const wy = hip[1] - 0.06 * h, hy = hip[1] + legLen * 0.42;
+      D.curve(x, [[-shW * 0.85, sh[1]], [shW * 0.85, sh[1]], [hipW * 1.05, wy], [hipW * 2.1, hy], [0, hy + 0.012 * h], [-hipW * 2.1, hy], [-hipW * 1.05, wy]]);
       x.fill();
+      x.strokeStyle = 'rgba(248,246,238,0.95)';
+      x.lineWidth = 0.012 * h;
+      x.beginPath(); x.moveTo(-hipW * 2.05, hy - 0.004 * h); x.quadraticCurveTo(0, hy + 0.02 * h, hipW * 2.05, hy - 0.004 * h); x.stroke();
+      x.strokeStyle = U.rgb(U.mix(col.dress, [255, 255, 255], 0.55));
+      x.lineWidth = 0.02 * h;
+      x.beginPath(); x.moveTo(-hipW * 1.05, wy); x.lineTo(hipW * 1.05, wy); x.stroke();
+      if (!back) {
+        x.fillStyle = 'rgb(248,246,238)';
+        for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * shW * 0.25, sh[1] + 0.015 * h, shW * 0.3, 0.02 * h, sd * 0.3, 0, 7); x.fill(); }
+      }
       if (o.backpack && back) {
         x.fillStyle = U.rgb(o.backpack);
         D.rrect(x, -shW * 0.75, sh[1] + 0.02 * h, shW * 1.5, 0.2 * h, 0.03 * h);
@@ -893,7 +936,7 @@
       const upperC = kind === 'mother' || kind === 'girl' ? col.dress : col.shirt;
       if (o.sleeves === 'short' && kind !== 'mother') {
         line(s0, el, 0.048 * h, U.rgb(col.skin));
-        line(s0, [U.lerp(s0[0], el[0], 0.5), U.lerp(s0[1], el[1], 0.5)], 0.064 * h, U.rgb(col.shirt));
+        line(s0, [U.lerp(s0[0], el[0], 0.45), U.lerp(s0[1], el[1], 0.45)], (kind === 'girl' ? 0.08 : 0.064) * h, U.rgb(kind === 'girl' ? col.dress : col.shirt));
         line(el, wr, 0.042 * h, U.rgb(col.skin));
       } else {
         line(s0, el, 0.056 * h, U.rgb(upperC));
@@ -924,7 +967,7 @@
           x.fill();
         } else {
           for (const sd of [-1, 1]) {
-            D.curve(x, [[hd[0] + sd * hr * 0.5, hd[1] - hr * 0.6], [hd[0] + sd * hr * 1.1, hd[1] - hr * 0.2], [hd[0] + sd * hr * 1.15, sh[1] + 0.06 * h], [hd[0] + sd * hr * 0.75, sh[1] + 0.05 * h], [hd[0] + sd * hr * 0.8, hd[1] + hr * 0.3]]);
+            D.curve(x, [[hd[0] + sd * hr * 0.5, hd[1] - hr * 0.6], [hd[0] + sd * hr * 1.1, hd[1] - hr * 0.2], [hd[0] + sd * hr * 1.12, hd[1] + hr * 1.2], [hd[0] + sd * hr * 0.78, hd[1] + hr * 1.15], [hd[0] + sd * hr * 0.8, hd[1] + hr * 0.3]]);
             x.fill();
           }
         }

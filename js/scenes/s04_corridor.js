@@ -142,12 +142,6 @@
     fog.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, W, H);
-    // for a moment, a red balloon in front of the end door
-    const rb = U.win(t, 22, 29.3, 1.2, 0.2);
-    if (rb > 0.01) {
-      const bz = Math.min(zE - 1.2, 9.5), bp = pr(0.28, FLOOR - 1.75 + Math.sin(t * 1.3) * 0.05, bz), br = (0.2 * f) / bz;
-      FILM.sets.balloon(ctx, bp[0], bp[1], Math.max(2, br), t, pr(0.28, FLOOR - 0.9, bz), rb * 0.9);
-    }
     // light under the end door
     const u0 = pr(-0.5, FLOOR - 0.02, zE), u1 = pr(0.5, FLOOR, zE);
     const warm = o.doorLight ?? 1;
@@ -204,7 +198,7 @@
       ctx.rotate(ang);
       // trouser leg
       ctx.fillStyle = U.rgb(U.mul([72, 74, 82], depth));
-      D.poly(ctx, [[-70, -700], [60, -700], [58, -80], [-72, -70]]);
+      D.poly(ctx, [[-78, -2600], [68, -2600], [58, -80], [-72, -70]]);
       ctx.fill();
       // ankle + foot (heel at origin, toes to the right)
       ctx.fillStyle = U.rgb(U.mul(skin, depth));

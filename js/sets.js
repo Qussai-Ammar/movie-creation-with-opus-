@@ -321,10 +321,17 @@
       D.curve(ctx, [[400, 470], [480, 452], [585, 462], [590, 492], [480, 500], [405, 496]]);
       ctx.fill();
       o.drawMan(ctx, P);
-      // blanket over his legs
+      // blanket over his legs, from the hip down the bed
       ctx.fillStyle = U.rgb(P.blanket);
-      D.curve(ctx, [[600, 500], [640, 462], [760, 452], [880, 460], [980, 446], [1100, 452], [1200, 468], [1228, 560], [900, 575], [600, 560]]);
+      D.curve(ctx, [[655, 540], [652, 482], [700, 458], [800, 452], [900, 462], [1000, 448], [1100, 454], [1200, 470], [1228, 560], [900, 575], [660, 560]]);
       ctx.fill();
+      // his body above the blanket line stays in front of it
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(300, -200, 1000, 662);
+      ctx.clip();
+      o.drawMan(ctx, P);
+      ctx.restore();
       ctx.strokeStyle = U.rgb(U.mul(P.blanket, 0.65), 0.8);
       ctx.lineWidth = 3;
       for (const [a, b] of [[[720, 470], [780, 540]], [[900, 470], [860, 540]], [[1040, 462], [1090, 530]]]) {

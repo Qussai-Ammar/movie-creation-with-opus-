@@ -1,4 +1,4 @@
-/* Scene 10 — The red balloon. Golden afternoon. Near his building a little girl with dark brown hair
+/* Scene 11 — The red balloon. Golden afternoon. Near his building a little girl with dark brown hair
    sees his tired face, walks over, and gives him her red balloon. */
 (function () {
   'use strict';
@@ -63,7 +63,7 @@
   }
 
   FILM.scene({
-    order: 10, num: 10, name: 'The red balloon', dur: 33,
+    order: 10, num: 11, name: 'The red balloon', dur: 33,
     fadeIn: 2.5,
     post: { grain: 0.07, vignette: 0.45 },
     draw(ctx, t) {
@@ -138,7 +138,7 @@
         const hh = [mx + man.hands[0][0], my + man.hands[0][1]];
         const pass = U.ss(6.1, 6.5, lt);
         const end = [U.lerp(gh[0], hh[0], pass), U.lerp(gh[1], hh[1], pass)];
-        balloon(ctx, end[0] + 60 - 200 * (1 - offer) * (1 - pass) + 90 * pass + Math.sin(lt * 1.2) * 14, end[1] + U.lerp(U.lerp(-400, -190, offer), -300, pass) + Math.sin(lt * 1.7) * 10, 88, t, end);
+        balloon(ctx, end[0] + 60 + 120 * (1 - offer) * (1 - pass) + 90 * pass + Math.sin(lt * 1.2) * 14, end[1] + U.lerp(U.lerp(-400, -190, offer), -300, pass) + Math.sin(lt * 1.7) * 10, 88, t, end);
         return;
       }
       if (t < 26) {
@@ -165,8 +165,8 @@
         ctx.restore();
         const blink = 1 - U.win(lt, 2.0, 2.3, 0.1, 0.2);
         C.head(ctx, {
-          x: 1020, y: 420, s: 420, yaw: -0.55, pitch: 0.16, kind: 'girl', skin: C.pal.girlSkin, hair: C.pal.girlHair, shirt: GIRL.dress,
-          eye: blink, gaze: [-0.35, -0.3], smile: 0.6 + 0.4 * U.ss(0.8, 2.4, lt),
+          x: 1000, y: 430, s: 400, yaw: -0.28, pitch: 0.12, kind: 'girl', skin: C.pal.girlSkin, hair: C.pal.girlHair, shirt: GIRL.dress,
+          eye: blink, gaze: [-0.45, -0.35], smile: 0.7 + 0.3 * U.ss(0.8, 2.4, lt),
           light: { dx: -1, dy: -0.4, col: [255, 214, 150], amt: 0.45 }, shadow: 0.4, shade: [90, 50, 30],
         });
         return;
