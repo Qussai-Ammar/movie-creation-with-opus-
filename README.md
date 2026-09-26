@@ -56,6 +56,14 @@ Music: one theme in Maqam Nahawand on D, played on oud and ney over strings. It 
 
 Palestinian details: tatreez cross-stitch on the mother's thobe, the framed embroidery and the finjans; a brass rakweh; cement-tile floors; limestone buildings with rooftop water tanks and solar heaters; black-and-white painted curbs; Arabic shop signs; a ka'ak seller's cart; Arabic-Indic door numbers.
 
+## Export to MP4
+
+```
+PLAYWRIGHT=/path/to/playwright FFMPEG=/path/to/ffmpeg node tools/export.js export/haneen-nostalgia.mp4
+```
+
+Renders every frame at 1920×804, 24 fps (letterboxed onto 1920×1080) across parallel headless-Chromium workers, renders the soundtrack offline scene by scene, and muxes H.264 + AAC. The export uses a softer film grain (`--grain 0.45`) so the file compresses well; `--crf`, `--workers`, `--from` and `--to` are also available.
+
 ## How it's built
 
 ```
