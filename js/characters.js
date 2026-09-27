@@ -9,15 +9,15 @@
   const C = (FILM.C = {});
 
   C.pal = {
-    manSkin: [170, 120, 88],
-    momSkin: [182, 131, 97],
-    boySkin: [186, 136, 101],
-    hair: [22, 17, 15],
+    manSkin: [200, 150, 114],
+    momSkin: [208, 158, 122],
+    boySkin: [214, 166, 130],
+    hair: [40, 30, 28],
     lip: [132, 72, 62],
     scarf: [226, 216, 196],
     thobe: [34, 36, 44],
     tatreez: [168, 32, 38],
-    girlSkin: [188, 138, 104],
+    girlSkin: [216, 168, 132],
     girlHair: [74, 44, 30],
   };
 
@@ -694,38 +694,56 @@
       const hn = add(wr, dn(sA + eA, 0.03 * h));
       return { el, wr, hn };
     };
+    const OL = Math.max(1, 0.0065 * h);
+    const INKC = U.rgb(C.INK || [46, 30, 26]);
     const line = (a, b, w, c) => {
-      x.strokeStyle = c; x.lineWidth = w; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.stroke();
+      x.lineCap = 'round';
+      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]);
+      x.strokeStyle = INKC; x.lineWidth = w + 2 * OL; x.stroke();
+      x.strokeStyle = c; x.lineWidth = w; x.stroke();
     };
+    const inkFill = () => { x.lineJoin = 'round'; x.lineWidth = 2 * OL; x.strokeStyle = INKC; x.stroke(); x.fill(); };
     const far = (c) => U.rgb(U.mul(c, 0.72));
     const Lg = leg(p.hL, p.kL, p.fL), Rg = leg(p.hR, p.kR, p.fR);
     const La = arm(p.sL, p.eL), Ra = arm(p.sR, p.eR);
     const shoe = o.shoe;
+    // a limb is a chain of segments: all ink first, then all colour, then a cel shadow along the back edge
+    const chain = (segs, farSide) => {
+      const k = farSide ? 0.72 : 1;
+      x.lineCap = 'round'; x.lineJoin = 'round';
+      for (const [a, b, w] of segs) { x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.strokeStyle = INKC; x.lineWidth = w + 2 * OL; x.stroke(); }
+      for (const [a, b, w, c] of segs) { x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.strokeStyle = U.rgb(U.mul(c, k)); x.lineWidth = w; x.stroke(); }
+      for (const [a, b, w, c] of segs) {
+        const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+        let nx = -dy / l, ny = dx / l;
+        if (nx * d > 0) { nx = -nx; ny = -ny; } // toward the back
+        const off = w * 0.28;
+        x.beginPath(); x.moveTo(a[0] + nx * off, a[1] + ny * off); x.lineTo(b[0] + nx * off, b[1] + ny * off);
+        x.strokeStyle = U.rgb(U.mul(c, k * 0.8)); x.lineWidth = w * 0.42; x.stroke();
+      }
+    };
     const drawLeg = (g, farSide) => {
-      const cc = farSide ? far : (c) => U.rgb(c);
       const pantsLow = child ? col.skin : col.pants;
-      line(hip, g.knee, (kind === 'girl' ? 0.07 : 0.085) * h, cc(kind === 'girl' ? col.skin : col.pants));
-      line(g.knee, g.ank, (kind === 'girl' ? 0.055 : 0.066) * h, cc(pantsLow));
-      if (kind === 'boy') line(g.knee, add(g.knee, [(hip[0] - g.knee[0]) * 0.1, (hip[1] - g.knee[1]) * 0.1]), 0.085 * h, cc(col.pants));
-      line(g.ank, g.toe, 0.038 * h, cc(shoe || col.skin));
+      const segs = [[hip, g.knee, (kind === 'girl' ? 0.07 : 0.085) * h, kind === 'girl' ? col.skin : col.pants], [g.knee, g.ank, (kind === 'girl' ? 0.055 : 0.066) * h, pantsLow]];
+      if (kind === 'boy') segs.push([g.knee, add(g.knee, [(hip[0] - g.knee[0]) * 0.1, (hip[1] - g.knee[1]) * 0.1]), 0.085 * h, col.pants]);
+      chain(segs, farSide);
+      chain([[g.ank, g.toe, 0.038 * h, shoe || col.skin]], farSide);
     };
     const drawArm = (a, farSide) => {
-      const cc = farSide ? far : (c) => U.rgb(c);
+      const segs = [];
       if (o.sleeves === 'short') {
-        line(sh, a.el, 0.05 * h, cc(col.skin));
-        line(a.el, a.wr, 0.044 * h, cc(col.skin));
-        line(sh, add(sh, [(a.el[0] - sh[0]) * 0.45, (a.el[1] - sh[1]) * 0.45]), (kind === 'girl' ? 0.085 : 0.066) * h, cc(kind === 'girl' ? col.dress : col.shirt));
+        segs.push([sh, a.el, 0.05 * h, col.skin], [a.el, a.wr, 0.044 * h, col.skin], [a.wr, a.hn, 0.042 * h, col.skin]);
+        chain(segs, farSide);
+        chain([[sh, add(sh, [(a.el[0] - sh[0]) * 0.45, (a.el[1] - sh[1]) * 0.45]), (kind === 'girl' ? 0.085 : 0.066) * h, kind === 'girl' ? col.dress : col.shirt]], farSide);
       } else {
-        line(sh, a.el, 0.058 * h, cc(col.shirt));
-        line(a.el, a.wr, 0.05 * h, cc(col.shirt));
+        chain([[sh, a.el, 0.058 * h, col.shirt], [a.el, a.wr, 0.05 * h, col.shirt]], farSide);
+        chain([[a.wr, a.hn, 0.042 * h, col.skin]], farSide);
       }
-      line(a.wr, a.hn, 0.042 * h, cc(col.skin));
     };
     // far limbs
     drawArm(Ra, true);
     if (kind !== 'mother') drawLeg(Rg, true);
-    else line(Rg.ank, Rg.toe, 0.038 * h, far(shoe || col.skin));
+    else chain([[Rg.ank, Rg.toe, 0.038 * h, shoe || col.skin]], true);
     // body
     if (kind === 'mother') {
       const ankY = Math.max(Lg.ank[1], Rg.ank[1]) - 0.02 * h;
@@ -735,7 +753,7 @@
         add(sh, [-d * 0.055 * h, 0]), add(sh, [d * 0.06 * h, 0.01 * h]), add(hip, [d * 0.09 * h, 0]),
         [midX + d * 0.14 * h, ankY], [midX - d * 0.12 * h, ankY], add(hip, [-d * 0.08 * h, 0]),
       ]);
-      x.fill();
+      inkFill();
       // tatreez panel on the chest + hem
       x.fillStyle = U.rgb(C.pal.tatreez, 0.95);
       const px = sh[0] + d * 0.012 * h, py = sh[1] + 0.03 * h;
@@ -744,7 +762,7 @@
         x.fillRect(px + (j - 2) * 0.012 * h, py + i * 0.016 * h, 0.009 * h, 0.009 * h);
       }
       for (let j = -5; j <= 5; j++) x.fillRect(midX + j * 0.024 * h, ankY - 0.03 * h, 0.012 * h, 0.012 * h);
-      line(Lg.ank, Lg.toe, 0.038 * h, U.rgb(shoe || col.skin));
+      chain([[Lg.ank, Lg.toe, 0.038 * h, shoe || col.skin]], false);
     } else if (kind === 'girl') {
       drawLeg(Lg, false);
       // a child's dress: fitted bodice, sash, a skirt that flares to just above the knee
@@ -753,9 +771,9 @@
       const midX = (Lg.knee[0] + Rg.knee[0] + 2 * hip[0]) / 4;
       x.fillStyle = U.rgb(col.dress);
       D.curve(x, [add(waist, [-d * 0.06 * h, 0]), add(waist, [d * 0.065 * h, 0]), [midX + d * 0.17 * h, hemY + 0.01 * h], [midX, hemY + 0.025 * h], [midX - d * 0.16 * h, hemY + 0.01 * h]]);
-      x.fill();
+      inkFill();
       D.curve(x, [add(sh, [-d * 0.05 * h, -0.005 * h]), add(sh, [d * 0.05 * h, 0.005 * h]), add(waist, [d * 0.065 * h, 0.01 * h]), add(waist, [-d * 0.06 * h, 0.01 * h])]);
-      x.fill();
+      inkFill();
       // skirt folds and a white hem
       x.strokeStyle = U.rgb(U.mul(col.dress, 0.72), 0.8);
       x.lineWidth = 0.006 * h;
@@ -770,10 +788,10 @@
       x.lineWidth = 0.022 * h;
       x.beginPath(); x.moveTo(waist[0] - d * 0.06 * h, waist[1]); x.lineTo(waist[0] + d * 0.065 * h, waist[1]); x.stroke();
       x.fillStyle = U.rgb(U.mix(col.dress, [255, 255, 255], 0.55));
-      x.beginPath(); x.ellipse(waist[0] - d * 0.07 * h, waist[1] + 0.015 * h, 0.02 * h, 0.03 * h, d * 0.4, 0, 7); x.fill();
+      x.beginPath(); x.ellipse(waist[0] - d * 0.07 * h, waist[1] + 0.015 * h, 0.02 * h, 0.03 * h, d * 0.4, 0, 7); inkFill();
       // white collar
       x.fillStyle = 'rgb(248,246,238)';
-      x.beginPath(); x.ellipse(sh[0] + d * 0.02 * h, sh[1] + 0.012 * h, 0.035 * h, 0.018 * h, 0, 0, 7); x.fill();
+      x.beginPath(); x.ellipse(sh[0] + d * 0.02 * h, sh[1] + 0.012 * h, 0.035 * h, 0.018 * h, 0, 0, 7); inkFill();
     } else {
       x.strokeStyle = U.rgb(col.pants);
       x.lineWidth = 0.1 * h;
@@ -786,8 +804,16 @@
       const at = (k, off) => [hip[0] + ax[0] * 0.29 * h * k + nv[0] * off * tw, hip[1] + ax[1] * 0.29 * h * k + nv[1] * off * tw];
       x.fillStyle = U.rgb(col.shirt);
       D.curve(x, [at(-0.02, 0.48), at(0.35, 0.5), at(0.72, 0.62), at(1.02, 0.45), at(1.08, -0.1), at(1.0, -0.52), at(0.55, -0.55), at(0.1, -0.5)]);
-      x.fill();
+      inkFill();
       x.beginPath(); x.arc(sh[0], sh[1] + 0.012 * h, 0.058 * h, 0, Math.PI * 2); x.fill();
+      // cel shadow down the back
+      x.save();
+      D.curve(x, [at(-0.02, 0.48), at(0.35, 0.5), at(0.72, 0.62), at(1.02, 0.45), at(1.08, -0.1), at(1.0, -0.52), at(0.55, -0.55), at(0.1, -0.5)]);
+      x.clip();
+      x.fillStyle = U.rgb(U.mul(col.shirt, 0.8));
+      D.poly(x, [at(-0.2, -0.12), at(0.5, -0.2), at(1.3, -0.05), at(1.3, -2), at(-0.2, -2)]);
+      x.fill();
+      x.restore();
       // folds and hem
       x.strokeStyle = U.rgb(U.mul(col.shirt, 0.7), 0.6);
       x.lineWidth = 0.005 * h;
@@ -803,64 +829,21 @@
     line(sh, nk, 0.045 * h, U.rgb(U.mul(col.skin, 0.85)));
     const hr = (child ? 0.075 : 0.064) * h;
     const ha = p.torso + p.neck + p.head;
-    const fwd = [Math.cos(ha) * d, Math.sin(ha)]; // head forward (rotated with tilt)
-    if (kind === 'mother') {
-      x.fillStyle = U.rgb(col.scarf || C.pal.scarf);
-      x.beginPath(); x.arc(hd[0] - fwd[0] * 0.012 * h, hd[1] - 0.004 * h, hr * 1.2, 0, Math.PI * 2); x.fill();
-      D.poly(x, [add(hd, [-d * hr * 1.1, 0]), add(hd, [d * hr * 0.4, hr]), add(sh, [d * 0.03 * h, 0.03 * h]), add(sh, [-d * 0.07 * h, 0.05 * h])]);
-      x.fill();
-      x.fillStyle = U.rgb(col.skin);
-      x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.5, hd[1] + fwd[1] * hr * 0.5 + 0.1 * hr, hr * 0.55, hr * 0.72, ha * d * 0.5, 0, Math.PI * 2); x.fill();
-    } else {
-      // canonical head: facing +x, upright; turned and mirrored to match the pose
-      x.save();
-      x.translate(hd[0], hd[1]);
-      x.scale(d, 1);
-      x.rotate(ha);
-      x.fillStyle = U.rgb(col.skin);
-      x.beginPath(); x.arc(0, 0, hr, 0, Math.PI * 2); x.fill();
-      x.beginPath(); x.ellipse(hr * 0.3, hr * 0.42, hr * 0.62, hr * 0.64, 0, 0, Math.PI * 2); x.fill(); // jaw
-      x.beginPath(); x.ellipse(hr * 0.98, hr * 0.12, hr * 0.2, hr * 0.17, 0.3, 0, Math.PI * 2); x.fill(); // nose
+    if (!o.rimPass && C.head) {
+      if (kind === 'mother') {
+        x.fillStyle = U.rgb(col.scarf || C.pal.scarf);
+        D.poly(x, [add(hd, [-d * hr * 1.1, 0]), add(hd, [d * hr * 0.4, hr]), add(sh, [d * 0.03 * h, 0.03 * h]), add(sh, [-d * 0.07 * h, 0.05 * h])]);
+        inkFill();
+      }
+      const s = hr / 0.4;
+      C.head(x, {
+        x: hd[0], y: hd[1] + 0.07 * s, s, yaw: d * (p.yaw ?? 1.15), roll: d * ha * 0.8, pitch: 0, bust: false, kind,
+        skin: col.skin, hair: col.hair, scarf: col.scarf, beard: o.beard ? 1 : 0.6, smile: p.smile || 0, eye: p.eye ?? 1, gaze: p.gaze || [0.5, 0],
+        wash: o.tint ? { col: o.tint[0], a: o.tint[1] * 0.6 } : null,
+      });
+    } else if (!o.rimPass) {
       x.fillStyle = U.rgb(col.hair);
-      x.beginPath(); x.arc(-hr * 0.06, -hr * 0.06, hr * (child ? 1.07 : 1.03), Math.PI - 0.35, Math.PI * 2 - 0.55, false); x.closePath(); x.fill();
-      x.beginPath(); x.arc(-hr * 0.32, -hr * 0.02, hr * 0.84, 0, Math.PI * 2); x.fill();
-      x.fillStyle = U.rgb(U.mul(col.skin, 0.8));
-      x.beginPath(); x.ellipse(-hr * 0.02, hr * 0.14, hr * 0.15, hr * 0.25, 0, 0, Math.PI * 2); x.fill(); // ear
-      x.restore();
-      if (o.beard && kind === 'man') {
-        x.fillStyle = U.rgb(col.hair, 0.3);
-        x.beginPath(); x.ellipse(hd[0] + fwd[0] * hr * 0.4, hd[1] + hr * 0.6, hr * 0.55, hr * 0.42, 0, 0, Math.PI * 2); x.fill();
-      }
-      if (kind === 'girl') {
-        // hair to her shoulders, a yellow band across the top
-        x.fillStyle = U.rgb(col.hair);
-        D.curve(x, [add(hd, [-fwd[0] * hr * 0.2, -hr * 0.95]), add(hd, [-fwd[0] * hr * 1.08, -hr * 0.2]), add(hd, [-fwd[0] * hr * 1.1, hr * 1.1]),
-          add(hd, [-fwd[0] * hr * 0.55, hr * 1.35]), add(hd, [-fwd[0] * hr * 0.05, hr * 0.5])]);
-        x.fill();
-        x.strokeStyle = 'rgb(240,196,70)';
-        x.lineWidth = hr * 0.18;
-        x.beginPath(); x.arc(hd[0] - fwd[0] * hr * 0.1, hd[1] - hr * 0.05, hr * 0.98, Math.PI * 1.15, Math.PI * 1.75); x.stroke();
-      }
-      // eye and brow when the figure is big enough to read them
-      if (h > 220) {
-        x.save();
-        x.translate(hd[0], hd[1]);
-        x.scale(d, 1);
-        x.rotate(ha);
-        x.fillStyle = 'rgba(20,14,12,0.85)';
-        x.beginPath(); x.ellipse(hr * 0.6, -hr * 0.08, hr * 0.08, hr * 0.1, 0, 0, Math.PI * 2); x.fill();
-        x.strokeStyle = U.rgb(col.hair, 0.9);
-        x.lineWidth = hr * (child ? 0.07 : 0.1);
-        x.lineCap = 'round';
-        x.beginPath(); x.moveTo(hr * 0.42, -hr * 0.3); x.lineTo(hr * 0.8, -hr * 0.28); x.stroke();
-        if (kind === 'man') {
-          x.fillStyle = U.rgb(col.hair, 0.25);
-          x.beginPath(); x.ellipse(hr * 0.42, hr * 0.55, hr * 0.5, hr * 0.38, 0, 0, Math.PI * 2); x.fill();
-        }
-        x.fillStyle = U.rgb(U.mul(col.skin, 0.55), 0.9);
-        x.fillRect(hr * 0.62, hr * 0.5, hr * 0.28, hr * 0.05); // mouth
-        x.restore();
-      }
+      x.beginPath(); x.arc(hd[0], hd[1], hr * 1.05, 0, Math.PI * 2); x.fill();
     }
     drawArm(La, false);
     return { hip, sh, hd, hr, hands: [La.hn, Ra.hn], feet: [Lg.toe, Rg.toe] };
@@ -876,9 +859,24 @@
     const bob = (p.bob || 0) * h;
     const hip = [0, bob];
     const sh = [0, bob - 0.29 * h];
+    const OL = Math.max(1, 0.0065 * h);
+    const INKC = U.rgb(C.INK || [46, 30, 26]);
     const line = (a, b, w, c) => {
-      x.strokeStyle = c; x.lineWidth = w; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.stroke();
+      x.lineCap = 'round';
+      x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]);
+      x.strokeStyle = INKC; x.lineWidth = w + 2 * OL; x.stroke();
+      x.strokeStyle = c; x.lineWidth = w; x.stroke();
+    };
+    const inkFill = () => { x.lineJoin = 'round'; x.lineWidth = 2 * OL; x.strokeStyle = INKC; x.stroke(); x.fill(); };
+    const chainF = (segs, sd) => {
+      x.lineCap = 'round'; x.lineJoin = 'round';
+      for (const [a, b, w] of segs) { x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.strokeStyle = INKC; x.lineWidth = w + 2 * OL; x.stroke(); }
+      for (const [a, b, w, c] of segs) { x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.strokeStyle = U.rgb(c); x.lineWidth = w; x.stroke(); }
+      for (const [a, b, w, c] of segs) {
+        const off = -sd * w * 0.28 * (back ? -1 : 1);
+        x.beginPath(); x.moveTo(a[0] + off, a[1]); x.lineTo(b[0] + off, b[1]);
+        x.strokeStyle = U.rgb(U.mul(c, 0.8)); x.lineWidth = w * 0.42; x.stroke();
+      }
     };
     const legs = [[-1, p.liftL || 0], [1, p.liftR || 0]];
     // legs
@@ -887,16 +885,15 @@
       const foot = [sd * hipW * 0.6, hip[1] + legLen * (1 - 0.1 * lift) - lift * 0.02 * h];
       const knee = [U.lerp(top[0], foot[0], 0.5), U.lerp(top[1], foot[1], 0.5)];
       if (kind === 'mother') continue;
-      line(top, knee, 0.085 * h, U.rgb(kind === 'girl' ? col.skin : col.pants));
-      line(knee, foot, 0.068 * h, U.rgb(child ? col.skin : col.pants));
+      chainF([[top, knee, 0.085 * h, kind === 'girl' ? col.skin : col.pants], [knee, foot, 0.068 * h, child ? col.skin : col.pants]], sd);
       x.fillStyle = U.rgb(o.shoe || col.skin);
-      x.beginPath(); x.ellipse(foot[0], foot[1] + 0.012 * h, 0.03 * h, 0.018 * h, 0, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.ellipse(foot[0], foot[1] + 0.012 * h, 0.03 * h, 0.018 * h, 0, 0, Math.PI * 2); inkFill();
     }
     // torso
     if (kind === 'mother') {
       x.fillStyle = U.rgb(col.dress);
       D.curve(x, [[-shW, sh[1] + 0.01 * h], [shW, sh[1] + 0.01 * h], [hipW * 1.2, hip[1]], [hipW * 1.7, hip[1] + legLen * 0.96], [-hipW * 1.7, hip[1] + legLen * 0.96], [-hipW * 1.2, hip[1]]]);
-      x.fill();
+      inkFill();
       if (!back) {
         x.fillStyle = U.rgb(C.pal.tatreez);
         for (let i = 0; i < 5; i++) for (let j = -2; j <= 2; j++) if ((i + j) % 2 === 0) x.fillRect(j * 0.013 * h, sh[1] + 0.04 * h + i * 0.015 * h, 0.009 * h, 0.009 * h);
@@ -905,7 +902,7 @@
       x.fillStyle = U.rgb(col.dress);
       const wy = hip[1] - 0.06 * h, hy = hip[1] + legLen * 0.42;
       D.curve(x, [[-shW * 0.85, sh[1]], [shW * 0.85, sh[1]], [hipW * 1.05, wy], [hipW * 2.1, hy], [0, hy + 0.012 * h], [-hipW * 2.1, hy], [-hipW * 1.05, wy]]);
-      x.fill();
+      inkFill();
       x.strokeStyle = 'rgba(248,246,238,0.95)';
       x.lineWidth = 0.012 * h;
       x.beginPath(); x.moveTo(-hipW * 2.05, hy - 0.004 * h); x.quadraticCurveTo(0, hy + 0.02 * h, hipW * 2.05, hy - 0.004 * h); x.stroke();
@@ -914,21 +911,21 @@
       x.beginPath(); x.moveTo(-hipW * 1.05, wy); x.lineTo(hipW * 1.05, wy); x.stroke();
       if (!back) {
         x.fillStyle = 'rgb(248,246,238)';
-        for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * shW * 0.25, sh[1] + 0.015 * h, shW * 0.3, 0.02 * h, sd * 0.3, 0, 7); x.fill(); }
+        for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * shW * 0.25, sh[1] + 0.015 * h, shW * 0.3, 0.02 * h, sd * 0.3, 0, 7); inkFill(); }
       }
       if (o.backpack && back) {
         x.fillStyle = U.rgb(o.backpack);
         D.rrect(x, -shW * 0.75, sh[1] + 0.02 * h, shW * 1.5, 0.2 * h, 0.03 * h);
-        x.fill();
+        inkFill();
       }
     } else {
       x.fillStyle = U.rgb(col.shirt);
       D.curve(x, [[-shW, sh[1]], [shW, sh[1]], [shW * 0.92, sh[1] + 0.1 * h], [hipW * 1.12, hip[1] + 0.02 * h], [-hipW * 1.12, hip[1] + 0.02 * h], [-shW * 0.92, sh[1] + 0.1 * h]]);
-      x.fill();
+      inkFill();
       if (o.backpack && back) {
         x.fillStyle = U.rgb(o.backpack);
         D.rrect(x, -shW * 0.75, sh[1] + 0.02 * h, shW * 1.5, 0.2 * h, 0.03 * h);
-        x.fill();
+        inkFill();
       }
     }
     // arms
@@ -939,28 +936,40 @@
       const wr = [el[0] + sd * 0.008 * h, el[1] + 0.145 * h * (1 - Math.abs(sw) * 0.25)];
       const upperC = kind === 'mother' || kind === 'girl' ? col.dress : col.shirt;
       if (o.sleeves === 'short' && kind !== 'mother') {
-        line(s0, el, 0.048 * h, U.rgb(col.skin));
-        line(s0, [U.lerp(s0[0], el[0], 0.45), U.lerp(s0[1], el[1], 0.45)], (kind === 'girl' ? 0.08 : 0.064) * h, U.rgb(kind === 'girl' ? col.dress : col.shirt));
-        line(el, wr, 0.042 * h, U.rgb(col.skin));
+        chainF([[s0, el, 0.048 * h, col.skin], [el, wr, 0.042 * h, col.skin]], sd);
+        chainF([[s0, [U.lerp(s0[0], el[0], 0.45), U.lerp(s0[1], el[1], 0.45)], (kind === 'girl' ? 0.08 : 0.064) * h, kind === 'girl' ? col.dress : col.shirt]], sd);
       } else {
-        line(s0, el, 0.056 * h, U.rgb(upperC));
-        line(el, wr, 0.048 * h, U.rgb(upperC));
+        chainF([[s0, el, 0.056 * h, upperC], [el, wr, 0.048 * h, upperC]], sd);
       }
       x.fillStyle = U.rgb(col.skin);
-      x.beginPath(); x.arc(wr[0], wr[1] + 0.02 * h, 0.022 * h, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.arc(wr[0], wr[1] + 0.02 * h, 0.022 * h, 0, Math.PI * 2); inkFill();
     }
     // neck + head
     const hr = (child ? 0.075 : 0.064) * h;
     const hd = [p.headX ? p.headX * h : 0, sh[1] - 0.045 * h - hr * 0.95 + (p.headDrop || 0) * h];
     line(sh, [hd[0], hd[1] + hr * 0.6], 0.045 * h, U.rgb(U.mul(col.skin, 0.8)));
+    if (o.rimPass) return { hip, sh, hd, hr };
+    if (!back && !o.rimPass && C.head) {
+      if (kind === 'mother') {
+        x.fillStyle = U.rgb(col.scarf || C.pal.scarf);
+        D.poly(x, [[hd[0] - hr * 1.2, hd[1]], [hd[0] + hr * 1.2, hd[1]], [shW * 1.05, sh[1] + 0.06 * h], [-shW * 1.05, sh[1] + 0.06 * h]]);
+        inkFill();
+      }
+      const s = hr / 0.4;
+      C.head(x, {
+        x: hd[0], y: hd[1] + 0.07 * s, s, yaw: p.headYaw || 0, roll: p.headRoll || 0, bust: false, kind,
+        skin: col.skin, hair: col.hair, scarf: col.scarf, beard: o.beard ? 1 : 0.6, smile: p.smile || 0, eye: p.eye ?? 1, gaze: p.gaze || [0, 0],
+        wash: o.tint ? { col: o.tint[0], a: o.tint[1] * 0.6 } : null,
+      });
+    } else
     if (kind === 'mother') {
       x.fillStyle = U.rgb(col.scarf || C.pal.scarf);
-      x.beginPath(); x.arc(hd[0], hd[1], hr * 1.22, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.arc(hd[0], hd[1], hr * 1.22, 0, Math.PI * 2); inkFill();
       D.poly(x, [[hd[0] - hr * 1.2, hd[1]], [hd[0] + hr * 1.2, hd[1]], [shW * 1.05, sh[1] + 0.06 * h], [-shW * 1.05, sh[1] + 0.06 * h]]);
-      x.fill();
+      inkFill();
       if (!back) {
         x.fillStyle = U.rgb(col.skin);
-        x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.1, hr * 0.7, hr * 0.85, 0, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.1, hr * 0.7, hr * 0.85, 0, 0, Math.PI * 2); inkFill();
       }
     } else {
       if (kind === 'girl') {
@@ -968,36 +977,36 @@
         x.fillStyle = U.rgb(col.hair);
         if (back) {
           D.curve(x, [[hd[0] - hr * 1.05, hd[1] - hr * 0.3], [hd[0] + hr * 1.05, hd[1] - hr * 0.3], [hd[0] + hr * 1.15, sh[1] + 0.06 * h], [hd[0] - hr * 1.15, sh[1] + 0.06 * h]]);
-          x.fill();
+          inkFill();
         } else {
           for (const sd of [-1, 1]) {
             D.curve(x, [[hd[0] + sd * hr * 0.5, hd[1] - hr * 0.6], [hd[0] + sd * hr * 1.1, hd[1] - hr * 0.2], [hd[0] + sd * hr * 1.12, hd[1] + hr * 1.2], [hd[0] + sd * hr * 0.78, hd[1] + hr * 1.15], [hd[0] + sd * hr * 0.8, hd[1] + hr * 0.3]]);
-            x.fill();
+            inkFill();
           }
         }
       }
       x.fillStyle = U.rgb(U.mul(col.skin, 0.85));
-      for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(hd[0] + sd * hr * 0.98, hd[1] + hr * 0.12, hr * 0.14, hr * 0.24, 0, 0, Math.PI * 2); x.fill(); }
+      for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(hd[0] + sd * hr * 0.98, hd[1] + hr * 0.12, hr * 0.14, hr * 0.24, 0, 0, Math.PI * 2); inkFill(); }
       x.fillStyle = U.rgb(back ? col.hair : col.skin);
-      x.beginPath(); x.ellipse(hd[0], hd[1], hr * 0.92, hr * 1.05, 0, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.ellipse(hd[0], hd[1], hr * 0.92, hr * 1.05, 0, 0, Math.PI * 2); inkFill();
       if (back) {
         x.fillStyle = U.rgb(U.mul(col.skin, 0.8));
-        x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.95, hr * 0.5, hr * 0.2, 0, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.95, hr * 0.5, hr * 0.2, 0, 0, Math.PI * 2); inkFill();
       } else {
         x.fillStyle = U.rgb(col.hair);
-        x.beginPath(); x.ellipse(hd[0], hd[1] - hr * 0.45, hr * 0.95, hr * 0.62, 0, Math.PI, Math.PI * 2); x.fill();
+        x.beginPath(); x.ellipse(hd[0], hd[1] - hr * 0.45, hr * 0.95, hr * 0.62, 0, Math.PI, Math.PI * 2); inkFill();
         x.fillRect(hd[0] - hr * 0.95, hd[1] - hr * 0.5, hr * 1.9, hr * 0.14);
         if (h > 160) {
           x.fillStyle = U.rgb(col.hair, 0.85);
           for (const sd of [-1, 1]) {
             x.fillRect(hd[0] + sd * hr * 0.36 - hr * 0.13, hd[1] - hr * 0.08, hr * 0.26, hr * 0.06);
-            x.beginPath(); x.arc(hd[0] + sd * hr * 0.36, hd[1] + hr * 0.08, hr * 0.07, 0, Math.PI * 2); x.fill();
+            x.beginPath(); x.arc(hd[0] + sd * hr * 0.36, hd[1] + hr * 0.08, hr * 0.07, 0, Math.PI * 2); inkFill();
           }
           x.fillStyle = U.rgb(U.mul(col.skin, 0.55));
           x.fillRect(hd[0] - hr * 0.2, hd[1] + hr * 0.58 - (p.smile || 0) * hr * 0.04, hr * 0.4, hr * 0.05);
           if (kind === 'man') {
             x.fillStyle = U.rgb(col.hair, 0.28);
-            x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.62, hr * 0.7, hr * 0.42, 0, 0, Math.PI); x.fill();
+            x.beginPath(); x.ellipse(hd[0], hd[1] + hr * 0.62, hr * 0.7, hr * 0.42, 0, 0, Math.PI); inkFill();
           }
         }
       }
@@ -1019,44 +1028,56 @@
     if (o.sleeve) {
       ctx.fillStyle = U.rgb(o.sleeve);
       D.poly(ctx, [[-0.55, 0.45], [0.55, 0.45], [0.9, 16], [-0.9, 16]]); // runs out of frame: never a floating cuff
+      ctx.strokeStyle = U.rgb(C.INK || [46, 30, 26]); ctx.lineWidth = 0.1; ctx.stroke();
       ctx.fill();
     }
-    ctx.strokeStyle = U.rgb(skin);
-    ctx.lineWidth = 0.62;
-    ctx.beginPath(); ctx.moveTo(0, 0.2); ctx.lineTo(0, o.sleeve ? 0.5 : 1.4); ctx.stroke(); // wrist
-    // thumb
+    const INKC = U.rgb(C.INK || [46, 30, 26]), OL = 0.05;
+    // the hand is one silhouette: every part is inked first, then every part is filled, so the fingers read as one
+    // shape with thin creases between them rather than separate outlined tubes
     const ta = thumb, tl = 0.62 * thumbLen;
-    ctx.lineWidth = 0.26;
-    ctx.strokeStyle = U.rgb(U.mul(skin, 0.95));
-    ctx.beginPath(); ctx.moveTo(-0.34, 0.2); ctx.lineTo(-0.34 + Math.sin(ta) * tl * 0.5, 0.2 - Math.cos(ta) * tl * 0.5);
-    ctx.lineTo(-0.34 + Math.sin(ta) * tl, 0.2 - Math.cos(ta) * tl); ctx.stroke();
-    // palm
-    ctx.fillStyle = U.rgb(skin);
-    D.rrect(ctx, -0.45, -0.5, 0.9, 1.0, 0.28);
-    ctx.fill();
-    // fingers
-    const fx = [-0.33, -0.11, 0.11, 0.33], fl = [0.72, 0.84, 0.8, 0.64];
-    for (let i = 0; i < 4; i++) {
+    const fx = [-0.31, -0.105, 0.105, 0.3], fl = [0.66, 0.8, 0.76, 0.58], fw = [0.21, 0.22, 0.215, 0.19];
+    const fingers = fx.map((x0, i) => {
       const L = fl[i] * (1 - 0.72 * curl);
       const a = (i - 1.5) * spread * 0.18;
-      const x0 = fx[i], y0 = -0.42;
-      const x1 = x0 + Math.sin(a) * L, y1 = y0 - Math.cos(a) * L;
-      ctx.strokeStyle = U.rgb(skin);
-      ctx.lineWidth = 0.21;
-      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-      // knuckle / nail shading
-      ctx.strokeStyle = U.rgb(dark, 0.35 + 0.4 * curl);
-      ctx.lineWidth = 0.02;
-      ctx.beginPath(); ctx.moveTo(x0 - 0.08, y0 - L * 0.45); ctx.lineTo(x0 + 0.08, y0 - L * 0.45); ctx.stroke();
-      if (curl > 0.4) {
-        ctx.fillStyle = U.rgb(dark, 0.5);
-        ctx.beginPath(); ctx.arc(x1, y1, 0.08, 0, 7); ctx.fill();
-      }
+      const y0 = -0.4;
+      return { x0, y0, L, a, w: fw[i], x1: x0 + Math.sin(a) * L, y1: y0 - Math.cos(a) * L };
+    });
+    const tj = [-0.36 + Math.sin(ta) * tl * 0.5, 0.18 - Math.cos(ta) * tl * 0.5], tt = [-0.36 + Math.sin(ta) * tl, 0.18 - Math.cos(ta) * tl];
+    const parts = [
+      { w: 0.6, path: () => { ctx.beginPath(); ctx.moveTo(0, 0.2); ctx.lineTo(0, o.sleeve ? 0.5 : 1.4); } },
+      { w: 0.25, path: () => { ctx.beginPath(); ctx.moveTo(-0.3, 0.22); ctx.lineTo(tj[0], tj[1]); ctx.lineTo(tt[0], tt[1]); } },
+      ...fingers.map((f) => ({ w: f.w, path: () => { ctx.beginPath(); ctx.moveTo(f.x0, f.y0 + 0.1); ctx.lineTo(f.x1, f.y1); } })),
+    ];
+    const palm = () => { ctx.beginPath(); ctx.moveTo(-0.44, -0.42); ctx.lineTo(0.42, -0.42); ctx.quadraticCurveTo(0.47, 0.1, 0.33, 0.45); ctx.lineTo(-0.3, 0.45); ctx.quadraticCurveTo(-0.48, 0.1, -0.44, -0.42); ctx.closePath(); };
+    ctx.lineJoin = 'round';
+    for (const pt of parts) { pt.path(); ctx.strokeStyle = INKC; ctx.lineWidth = pt.w + 2 * OL; ctx.stroke(); }
+    palm(); ctx.strokeStyle = INKC; ctx.lineWidth = 2 * OL; ctx.stroke();
+    for (const pt of parts) { pt.path(); ctx.strokeStyle = U.rgb(skin); ctx.lineWidth = pt.w; ctx.stroke(); }
+    palm(); ctx.fillStyle = U.rgb(skin); ctx.fill();
+    // cel shadow down the outer edge of the hand and under the thumb
+    ctx.save();
+    palm(); ctx.clip();
+    ctx.fillStyle = U.rgb(dark, 0.4);
+    ctx.beginPath(); ctx.ellipse(0.62, 0.05, 0.36, 0.75, 0, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = U.rgb(dark, 0.4); ctx.lineWidth = 0.08;
+    for (const f of fingers.slice(2)) { ctx.beginPath(); ctx.moveTo(f.x0 + f.w * 0.25, f.y0); ctx.lineTo(f.x1 + f.w * 0.25, f.y1 + 0.04); ctx.stroke(); }
+    // creases between the fingers
+    ctx.strokeStyle = U.rgb(C.INK || [46, 30, 26], 0.55); ctx.lineWidth = 0.035;
+    for (let i = 0; i < 3; i++) {
+      const f = fingers[i], g = fingers[i + 1];
+      const mx0 = (f.x0 + g.x0) / 2, mx1 = (f.x1 + g.x1) / 2, my1 = Math.max(f.y1, g.y1) + 0.1;
+      if (my1 > f.y0 - 0.05) continue;
+      ctx.beginPath(); ctx.moveTo(mx0, f.y0 - 0.02); ctx.lineTo(U.lerp(mx0, mx1, 0.9), my1); ctx.stroke();
     }
-    // shading along the edge
-    ctx.fillStyle = U.rgb(dark, 0.3);
-    D.rrect(ctx, 0.25, -0.5, 0.2, 1.0, 0.1);
-    ctx.fill();
+    // a curled hand shows its knuckles
+    if (curl > 0.4) {
+      ctx.strokeStyle = U.rgb(dark, 0.6); ctx.lineWidth = 0.03;
+      ctx.beginPath(); ctx.moveTo(-0.4, -0.44 - fingers[0].L * 0.2); ctx.quadraticCurveTo(0, -0.52 - fingers[1].L * 0.3, 0.38, -0.44 - fingers[3].L * 0.2); ctx.stroke();
+    }
+    // the thumb's crease into the palm
+    ctx.strokeStyle = U.rgb(dark, 0.55); ctx.lineWidth = 0.03;
+    ctx.beginPath(); ctx.moveTo(-0.3, 0.3); ctx.quadraticCurveTo(-0.12, 0.05, -0.2, -0.25); ctx.stroke();
     ctx.restore();
   };
 
@@ -1086,7 +1107,7 @@
       ctx.save();
       ctx.globalAlpha *= o.rim.a ?? 0.7;
       ctx.translate(o.rim.dx, o.rim.dy);
-      draw(ctx, Object.assign({}, oo, { shoe: shoe ? o.rim.col : null }), rc);
+      draw(ctx, Object.assign({}, oo, { shoe: shoe ? o.rim.col : null, rimPass: true }), rc);
       ctx.restore();
     }
     res = draw(ctx, oo, col);

@@ -32,6 +32,7 @@
     sky.addColorStop(1, 'rgb(120,120,160)');
     ctx.fillStyle = sky;
     ctx.fillRect(-100, -100, W + 200, H + 200);
+    for (const [cx, cy, cw, sd] of [[520, 330, 760, 11], [1330, 200, 560, 12], [980, 640, 520, 13], [760, 90, 420, 14]]) S.cloud(ctx, cx + t * 6, cy, cw, 'golden', sd);
     for (const s of [-1, 1]) {
       const edge = (y) => 960 + s * U.lerp(760, 250, (H + 100 - y) / (H + 300));
       const col = s < 0 ? [176, 128, 90] : [132, 92, 70];

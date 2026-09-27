@@ -133,9 +133,9 @@
             x: 650, y: 492, h: 560, facing: 1, sleeves: 'short',
             pose: {
               torso: U.lerp(-1.42, 0.12 + 0.3 * toFace, up) + pant, neck: U.lerp(0.1, -0.1 + 0.45 * toFace, up), head: 0.1 * toFace,
-              sL: U.lerp(0.4, -0.35, up) * (1 - toFace) + 0.5 * toFace, eL: U.lerp(0.2, 0.1, up) * (1 - toFace) + 2.15 * toFace,
-              sR: U.lerp(0.3, -0.5, up) * (1 - toFace) + 0.42 * toFace, eR: 0.1 + 2.2 * toFace,
-              hL: 1.55, kL: 0.05, hR: 1.5, kR: 0.08,
+              sL: U.lerp(0.4, 0.2, up) * (1 - toFace) + 0.5 * toFace, eL: U.lerp(0.2, 0.95, up) * (1 - toFace) + 2.15 * toFace,
+              sR: 0.3 * (1 - toFace) + 0.42 * toFace, eR: U.lerp(0.1, 0.8, up) * (1 - toFace) + 2.3 * toFace,
+              hL: 1.55, kL: 0.05, hR: 1.5, kR: 0.08, fL: -1.45, fR: -1.4,
             },
             col: { skin: U.mix(C.pal.manSkin, P.wall, 0.5), shirt: P.shirt, pants: U.mul(P.shirt, 0.7), hair: C.pal.hair },
             rim: { col: U.mix(P.light, [255, 255, 255], 0.2), dx: 3, dy: -1, a: 0.5 },

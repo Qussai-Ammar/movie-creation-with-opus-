@@ -4,6 +4,7 @@
 
   const W = 1920, H = 804; // logical frame, 2.39:1
   const FILM = (window.FILM = window.FILM || {});
+  FILM.post = FILM.post || { on: false, init() { return false; }, apply() {} };
   FILM.W = W; FILM.H = H;
   FILM.list = [];
 
@@ -296,7 +297,8 @@
     ctx.setTransform(Q, 0, 0, Q, 0, 0);
     if (P.vignette > 0) D.vignette(ctx, P.vignette);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (P.grain > 0 && grains.length) {
+    FILM.lastGrain = P.grain * GRAIN;
+    if (P.grain > 0 && grains.length && !FILM.post.on) {
       const f = Math.floor(t * 24);
       const g = grains[f % grains.length];
       ctx.globalCompositeOperation = 'overlay';
@@ -325,6 +327,7 @@
       drawScene(ctx, s, lt);
     }
     post(s, lt, t);
+    if (FILM.post.on) FILM.post.apply(t, FILM.lastGrain);
     FILM.current = s;
   }
   FILM.renderAt = (t) => render(U.clamp(t, 0, FILM.total - 0.001));
@@ -440,6 +443,8 @@
     canvas.height = Math.round(H * Q);
     ctx = FILM.ctx = canvas.getContext('2d');
     makeGrain();
+    FILM.outCanvas = canvas;
+    if (params.get('fx') !== '0') FILM.post.init(canvas);
     if (params.has('t')) T = U.clamp(parseFloat(params.get('t')) || 0, 0, FILM.total - 0.001);
     if (params.has('still')) {
       // test mode: render a single frame, no loop, no audio

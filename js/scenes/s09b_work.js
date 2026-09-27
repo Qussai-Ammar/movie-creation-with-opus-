@@ -204,13 +204,15 @@
     };
     stack(890, waiting, 120, 7);
     stack(655, done, 110, 9);
-    // an arm from outside the frame drops more on the pile
+    // more work lands on the pile
     for (const d of [4.2, 7.4, 9.6]) {
-      const k = U.win(lt, d - 0.7, d + 0.6, 0.5, 0.5);
-      if (k <= 0.01) continue;
+      const k = U.inv(d - 0.35, d, lt);
+      if (k <= 0 || k >= 1) continue;
       const topY = 470 - waiting;
-      C.hand(ctx, { x: U.lerp(1700, 1060, k), y: topY - 40, s: 150, rot: -1.5, curl: 0.2, thumb: -0.3, skin: [160, 116, 86], sleeve: [110, 116, 130] });
-      if (lt < d) { ctx.fillStyle = U.rgb(PAPER); ctx.fillRect(U.lerp(1600, 950, k), topY - 60, 140, 40); }
+      ctx.fillStyle = U.rgb(PAPER);
+      ctx.fillRect(890 + (1 - k) * 30, topY - 40 - (1 - k * k) * 260, 120, 40);
+      ctx.strokeStyle = U.rgb(FILM.C.INK); ctx.lineWidth = 2;
+      ctx.strokeRect(890 + (1 - k) * 30, topY - 40 - (1 - k * k) * 260, 120, 40);
     }
 
     // him, at work: take a sheet, stamp it, put it on the done pile — again

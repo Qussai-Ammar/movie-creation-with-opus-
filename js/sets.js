@@ -6,6 +6,47 @@
 
   /* ======================================================== the red balloon */
   // the only saturated red in the film. end = [x, y] where the string is held (or trails to)
+  /* painted cumulus in the Ghibli manner: a flat underside, a crescent of shadow under every puff, bright tops.
+     Each cloud is painted once and cached. pal: 'day' | 'golden' | 'dawn' */
+  const CLOUD = {
+    day: { lit: [255, 255, 250], sh: [182, 194, 218], hi: [255, 255, 255], under: [150, 166, 200] },
+    golden: { lit: [255, 222, 186], sh: [216, 150, 138], hi: [255, 242, 214], under: [176, 118, 118] },
+    dawn: { lit: [236, 214, 214], sh: [150, 150, 186], hi: [250, 236, 226], under: [118, 120, 160] },
+  };
+  S.cloud = function (ctx, x, y, w, pal = 'day', seed = 1, alpha = 1) {
+    const P = CLOUD[pal];
+    const hgt = w * 0.6;
+    const c = FILM.cached(`cloud-${pal}-${seed}-${Math.round(w)}`, w, hgt, (cx) => {
+      const r = U.rng(seed * 31 + 7);
+      const yb = hgt * 0.86;
+      const puffs = [];
+      const n = 16 + ((r() * 6) | 0);
+      for (let i = 0; i < n; i++) {
+        const u = 0.08 + 0.84 * r();
+        const f = 1 - Math.abs(2 * u - 1) ** 1.4;
+        const rr = w * (0.05 + 0.11 * f * (0.6 + 0.4 * r()));
+        puffs.push([w * u, yb - rr * 0.5 - f * w * 0.14 * (0.5 + 0.5 * r()), rr]);
+      }
+      puffs.sort((a, b) => a[1] - b[1]);
+      cx.save();
+      cx.beginPath(); cx.rect(0, 0, w, yb); cx.clip();
+      cx.fillStyle = U.rgb(P.sh);
+      for (const [px, py, pr] of puffs) { cx.beginPath(); cx.arc(px, py, pr, 0, 7); cx.fill(); }
+      cx.globalCompositeOperation = 'source-atop';
+      cx.fillStyle = U.rgb(P.lit);
+      for (const [px, py, pr] of puffs) { cx.beginPath(); cx.arc(px - pr * 0.12, py - pr * 0.22, pr * 0.9, 0, 7); cx.fill(); }
+      cx.fillStyle = U.rgb(P.hi, 0.7);
+      for (const [px, py, pr] of puffs) { if (py > yb - w * 0.1) continue; cx.beginPath(); cx.arc(px - pr * 0.25, py - pr * 0.4, pr * 0.55, 0, 7); cx.fill(); }
+      cx.fillStyle = D.lgrad(cx, 0, yb - w * 0.12, 0, yb, [[0, P.under, 0], [1, P.under, 0.85]]);
+      cx.fillRect(0, 0, w, yb);
+      cx.restore();
+    });
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.drawImage(c, x - w / 2, y - hgt * 0.86, w, hgt);
+    ctx.restore();
+  };
+
   S.balloon = function (ctx, x, y, r, t, end, alpha = 1) {
     ctx.save();
     ctx.globalAlpha *= alpha;
@@ -328,7 +369,7 @@
       // his body above the blanket line stays in front of it
       ctx.save();
       ctx.beginPath();
-      ctx.rect(300, -200, 1000, 662);
+      ctx.rect(300, -200, 480, 662);
       ctx.clip();
       o.drawMan(ctx, P);
       ctx.restore();
@@ -585,6 +626,15 @@
       D.glow(ctx, s[0], s[1], 90, [255, 245, 220], 1);
     } else {
       D.glow(ctx, 1500, 40, 600, [255, 244, 225], 0.35);
+    }
+    // clouds drifting over the street, a little parallax with the camera
+    {
+      const drift = (o.t ?? t) * 4 - cam.x * 12;
+      const cp = golden ? 'golden' : 'day';
+      for (const [cx0, cy, cw, sd] of [[260, -330, 620, 1], [760, -250, 480, 2], [1240, -190, 380, 3], [1650, -310, 560, 4], [1000, -120, 260, 5]]) {
+        const xx = ((cx0 + drift + 400) % (W + 800)) - 400;
+        S.cloud(ctx, xx, VP.y + cy + (top - pr(0, -40, 60)[1]), cw, cp, sd, golden ? 0.85 : 0.95);
+      }
     }
     // distant hill with houses
     ctx.fillStyle = U.rgb(P.hill);

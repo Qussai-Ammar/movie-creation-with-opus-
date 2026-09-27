@@ -91,7 +91,7 @@ async function renderSegment(browser, idx, f0, f1, file) {
   { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((res, rej) => ff.on('close', (c) => (c ? rej(new Error('ffmpeg ' + c)) : res())));
   for (let f = f0; f < f1; f++) {
-    const b64 = await page.evaluate((t) => { FILM.renderAt(t); return FILM.canvas.toDataURL('image/jpeg', 0.95).slice(23); }, f / FPS);
+    const b64 = await page.evaluate((t) => { FILM.renderAt(t); return (FILM.outCanvas || FILM.canvas).toDataURL('image/jpeg', 0.95).slice(23); }, f / FPS);
     if (!ff.stdin.write(Buffer.from(b64, 'base64'))) await new Promise((r) => ff.stdin.once('drain', r));
     if ((f - f0) % 240 === 0) console.log(`video[${idx}]: frame ${f - f0}/${f1 - f0}`);
   }
@@ -101,7 +101,7 @@ async function renderSegment(browser, idx, f0, f1, file) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ args: ['--allow-file-access-from-files'] });
+  const browser = await chromium.launch({ args: ['--allow-file-access-from-files', '--enable-unsafe-swiftshader'] });
   const probe = await openPage(browser);
   const total = await probe.evaluate(() => FILM.total);
   await probe.context().close();
