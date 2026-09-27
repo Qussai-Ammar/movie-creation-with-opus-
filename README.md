@@ -4,7 +4,7 @@
 
 An animated short about one exhausting night of a Palestinian man in his late twenties: four recurring nightmares, a day that repeats them in daylight, and a fragile, hopeful afternoon. There is no dialogue or narration. Environmental sound and an original score carry it.
 
-Everything is generated in code. The images are drawn live on an HTML canvas, and every sound and every note of the music is synthesized with the Web Audio API. There are no image, video or audio files.
+Everything is generated in code. The images are drawn live on an HTML canvas in a hand-drawn anime style (ink outlines, cel shading, painted clouds), then pass through a WebGL painter's shader that gives each frame a painted, paper-textured finish. Every sound and every note of the music is synthesized with the Web Audio API. There are no image, video or audio files.
 
 ## Watch it
 
@@ -28,6 +28,7 @@ URL options:
 - `?q=1` renders at full 1920×804 (the default is `0.75`; use `0.5` on slow machines).
 - `?t=120` starts at 120 s.
 - `?t=120&still` renders one frame with no audio (used for testing).
+- `?fx=0` turns off the WebGL painter pass. It also switches itself off on machines too slow to keep up.
 
 ## The film (≈ 6 min 52 s)
 
@@ -43,14 +44,14 @@ URL options:
 | 7 | Waking before dawn | 32 s | A jolt; flashes of the nightmares; 04:51 → 04:52; a tear; the photo of his mother glows once under his fingertips |
 | 8 | Morning routine | 26 s | The mirror, a face he touches to check it is his; a paracetamol; water |
 | 9 | Leaving home | 26 s | Stairwell; the street wakes: shutters, a ka'ak seller, children walking to school |
-| 10 | Work | 34 s | The day repeats the night: the coffee comes in the same finjan, the office aisle is the corridor, the pile of paper grows back however much he clears, and the office floods like the sea until he closes his eyes |
-| 11 | The red balloon | 33 s | Golden afternoon. A little girl with dark brown hair, in a blue dress, gives him her red balloon |
+| 10 | Work | 34 s | An ordinary day: coffee from the kiosk, a long office aisle, a pile of paper that grows back however much he clears; at the end he just rests his eyes |
+| 11 | The red balloon | 33 s | Golden afternoon. He stops at his door; out of nowhere a little girl with dark brown hair, in a blue dress, runs up and gives him her red balloon |
 | 12 | Final moment | 40 s | His first smile. He lets the balloon go by his own choice. Home. The same bedroom, golden now; the balloon drifts past the window |
 | — | Ending | 25 s | حنين · "To the generations still searching for their balloon" · a one-line note: made entirely with AI · Claude |
 
 The red balloon is the thread of the story: lost in childhood, given back by a stranger's child, and finally released by his own choice. It appears only in the waking world and the memory, never in the nightmares.
 
-The day mirrors the night: the finjan that chased him is the cup he is handed at the kiosk, the office aisle stretches like the corridor, and the work that never shrinks drowns him like the sea.
+The day quietly echoes the night without ever saying so: a finjan handed over at the kiosk, a long aisle, work that never shrinks. The viewer makes the connection.
 
 Music: one theme in Maqam Nahawand on D, played on oud and ney over strings. It is whispered in the bedroom, broken into drones and ostinatos in the nightmares and at work, whole in the mother's kitchen, and silent in the bathroom. When he first smiles it returns in Ajam (D major), the first major chord of the film.
 
@@ -72,9 +73,10 @@ js/core.js              engine: math/easing/noise, drawing helpers, timeline, di
                         film grain + vignette, cached/offscreen layers, player controls
 js/audio.js             Web Audio: noise beds, synthesized one-shots, shared reverbs, and a director that
                         starts and stops each scene's sound so seeking always lands in sync
-js/characters.js        C.head: a pseudo-3D painted head (man, mother, boy, girl; gaze, smile, tears, lighting);
-                        C.figure: posable body (side/front/back); C.hand; pose library
-js/sets.js              shared sets: the red balloon, the bedroom (night, dawn, golden), the ceiling,
+js/characters.js        C.figure: posable, inked, cel-shaded body (side/front/back); C.hand; pose library
+js/anime.js             C.head: anime-style head turning in 3D (man, mother, boy, girl; gaze, smile, tears, light)
+js/post.js              WebGL2 painter pass: light Kuwahara, pigment edges, bloom, grade, paper, grain
+js/sets.js              shared sets: the red balloon, painted clouds, the bedroom (night, dawn, golden), the ceiling,
                         the pillow close-up, and a perspective Palestinian street
 js/music.js             the score: oud (Karplus-Strong), ney, string pad, piano, cello; one cue per scene
 js/scenes/*.js          one file per scene: its shots (draw) and its soundscape (audio)
