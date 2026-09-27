@@ -296,11 +296,10 @@
         i++;
       }
       pad(h, b, 15.5, 'lowD', 10, { gain: 0.05, a: 3, r: 1, cut: 500 });
-      at(h, 25.3, (w) => ins.cello(h, b, w, N('D1') * 2, 4, { gain: 0.09, a: 1.5, r: 0.2, cut: 300 }));
-      pad(h, b, 25.3, 'cluster', 3.9, { gain: 0.1, a: 2.5, r: 0.1, cut: 700 });
-      for (let T2 = 25.6; T2 < 29.2; T2 += 0.8) note(h, b, T2, 'thump', 'D1', 0.5, { gain: 0.14 });
-      // after: one soft chord, the afternoon
-      pad(h, b, 30.2, 'F', 3.8, { gain: 0.05, a: 1.5, r: 2 });
+      // when he stops: the ostinato falls away to one soft chord, the afternoon
+      pad(h, b, 25.8, 'F', 8, { gain: 0.06, a: 2.5, r: 2.5 });
+      note(h, b, 26.6, 'piano', 'A4', 2.5, { gain: 0.06 });
+      note(h, b, 28.2, 'piano', 'F4', 3, { gain: 0.05 });
     },
     11(h) { // the girl: warmth, then the theme on oud as she holds it up to him; it turns major as he takes it
       const b = bus(h, 0.9, 'street', 0.45);

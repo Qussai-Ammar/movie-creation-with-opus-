@@ -59,32 +59,24 @@
   /* ------------------------------------- B: the cup — it is that cup */
   function cupClose(ctx, t, lt) {
     D.vgrad(ctx, -100, -100, W + 200, H + 200, [[0, [70, 62, 58]], [1, [40, 34, 32]]]);
-    const drift = U.ss(0.5, 4.5, lt);
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    D.glow(ctx, 960, 380, 520, [255, 236, 210], 0.1 + 0.08 * drift);
+    D.glow(ctx, 960, 380, 520, [255, 236, 210], 0.12);
     ctx.restore();
-    // his hand holding it still — but the band keeps turning on its own
-    const z = 1 + lt * 0.035;
+    // just a cup of coffee in his hand; he looks at it a moment too long
+    const z = 1 + lt * 0.02;
     ctx.save();
     D.cam(ctx, 960, 402, z);
-    FILM.sets.finjan(ctx, 960, 430, 420, t * 0.45 * drift + 0.6, 0.55, 0.6);
-    // the coffee trembles in rings
-    ctx.strokeStyle = 'rgba(160,110,70,0.35)';
-    ctx.lineWidth = 3;
+    FILM.sets.finjan(ctx, 960, 430, 420, 0.6, 0.55, 0.6);
+    ctx.strokeStyle = 'rgba(255,250,240,0.16)';
+    ctx.lineWidth = 14;
     for (let i = 0; i < 3; i++) {
-      const r = ((lt * 0.4 + i / 3) % 1) * 180;
-      ctx.beginPath(); ctx.ellipse(960, 244, r, r * 0.18, 0, 0, 7); ctx.stroke();
-    }
-    // one drop lifts off the surface, upward, as in the dream
-    const up = U.easeIn(U.inv(2.8, 4.4, lt));
-    if (lt > 2.8) {
-      ctx.fillStyle = 'rgb(30,16,8)';
-      ctx.beginPath(); ctx.ellipse(990, 238 - up * 360, 8, 11 + up * 6, 0, 0, 7); ctx.fill();
+      ctx.beginPath();
+      for (let k = 0; k < 10; k++) { const y = 220 - k * 26, x = 930 + i * 30 + Math.sin(k * 0.6 + t * 1.4 + i) * 16; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
     }
     C.hand(ctx, { x: 1225, y: 520, s: 230, rot: -1.5, curl: 0.72, thumb: -0.5, skin: OUT.skin, sleeve: OUT.shirt });
     ctx.restore();
-    D.screen(ctx, 'rgb(20,14,12)', 0.25 * U.ss(3.6, 4.6, lt));
   }
 
   /* --------------------------------------------- C: the office aisle */
@@ -188,7 +180,7 @@
     // the paper: what he has done, and what is still waiting (which never gets smaller)
     const cycles = Math.max(0, lt / CYCLE);
     const n = Math.floor(cycles), ph = cycles - n;
-    const dumps = [4.2, 8.1, 11.2].filter((d) => lt > d).length;
+    const dumps = [4.2, 7.4, 9.6].filter((d) => lt > d).length;
     const done = Math.min(26, n) * 5 + (lt > 14 ? 0 : 0);
     const waiting = 70 + n * 3 + dumps * 45 + U.ss(0, 0.3, lt % 4) * 0;
     // desk top
@@ -213,7 +205,7 @@
     stack(890, waiting, 120, 7);
     stack(655, done, 110, 9);
     // an arm from outside the frame drops more on the pile
-    for (const d of [4.2, 8.1, 11.2]) {
+    for (const d of [4.2, 7.4, 9.6]) {
       const k = U.win(lt, d - 0.7, d + 0.6, 0.5, 0.5);
       if (k <= 0.01) continue;
       const topY = 470 - waiting;
@@ -223,7 +215,7 @@
 
     // him, at work: take a sheet, stamp it, put it on the done pile — again
     const hipX = 520, hipY = 540, h = 700;
-    const tau = 0.32 + (o.freeze ? 0 : 0.03 * Math.sin(lt * 2));
+    const tau = o.rest ? U.lerp(0.32, -0.02, o.rest) : 0.32 + (o.freeze ? 0 : 0.03 * Math.sin(lt * 2));
     const shx = hipX + Math.sin(tau) * 0.29 * h, shy = hipY - Math.cos(tau) * 0.29 * h;
     const pIn = [920, 470 - waiting - 6], pMid = [800, 455], pDone = [700, 470 - done - 8];
     let target, carrying = false;
@@ -234,11 +226,16 @@
     else { carrying = true; const k = U.smooth((ph - 0.7) / 0.3); target = [U.lerp(pMid[0], pDone[0], k), U.lerp(pMid[1], pDone[1], k)]; }
     const [sA, eA] = reach([shx, shy], target, 0.165 * h, 0.18 * h);
     const up = o.lookUp || 0;
+    const rest = o.rest || 0, rub = o.rub || 0;
     const res = C.figure(ctx, {
       x: hipX, y: hipY, h, facing: 1, col: OUT, shoe: SHOE,
-      pose: { torso: tau - up * 0.25, neck: 0.3 - up * 0.9, head: 0.1 - up * 0.4, sL: sA, eL: eA, sR: 0.9, eR: 0.9, hL: 1.5, kL: 1.45, hR: 1.45, kR: 1.4 },
+      pose: {
+        torso: tau - up * 0.25, neck: U.lerp(0.3 - up * 0.9, 0.05 - 0.25 * (1 - rub), rest), head: U.lerp(0.1 - up * 0.4, 0.1, rest),
+        sL: U.lerp(sA, 0.55, rest), eL: U.lerp(eA, 2.2 * rub + 0.5 * (1 - rub), rest), sR: U.lerp(0.9, 0.35, rest), eR: U.lerp(0.9, 0.6, rest),
+        hL: 1.5, kL: 1.45, hR: 1.45, kR: 1.4,
+      },
     });
-    if (carrying) {
+    if (carrying && !rest) {
       const hx = hipX + res.hands[0][0], hy = hipY + res.hands[0][1];
       ctx.fillStyle = U.rgb(PAPER);
       ctx.save(); ctx.translate(hx, hy); ctx.rotate(-0.1); ctx.fillRect(-60, -8, 120, 10); ctx.restore();
@@ -252,68 +249,19 @@
     FILM.sets.finjan(ctx, 1320, 452, 34, 0.7, 0.35, 0);
   }
 
-  // D2: the office floods, the way the sea did
-  function flood(ctx, t, lt, k) {
-    D.screen(ctx, 'rgb(12,60,74)', 0.5 * k, 'multiply');
-    D.screen(ctx, 'rgb(20,80,96)', 0.22 * k);
-    // light rippling on the walls, as under water
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    ctx.strokeStyle = `rgba(150,230,225,${0.16 * k})`;
-    ctx.lineWidth = 5;
-    for (let i = 0; i < 12; i++) {
-      ctx.beginPath();
-      for (let x = -40; x <= W + 40; x += 40) {
-        const y = 40 + i * 36 + Math.sin(x * 0.012 + t * 1.6 + i) * 12;
-        x === -40 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-    // loose sheets lift off the pile and float upward, turning slowly
-    const r = U.rng(99);
-    for (let i = 0; i < 14; i++) {
-      const t0 = r() * 2.5, sx = 880 + r() * 180, sp = 60 + r() * 90;
-      const age = lt - t0;
-      if (age < 0) continue;
-      const y = 300 - age * sp, x = sx + Math.sin(age * 1.3 + i) * 50;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(Math.sin(age * 0.9 + i) * 0.7);
-      ctx.fillStyle = `rgba(236,232,222,${0.9 * k})`;
-      ctx.fillRect(-55, -38, 110, 76);
-      ctx.restore();
-    }
-    // bubbles from his mouth
-    for (let i = 0; i < 8; i++) {
-      const age = lt - i * 0.3;
-      if (age < 0) continue;
-      const y = 250 - age * 170, x = 690 + Math.sin(age * 5 + i) * 8;
-      ctx.strokeStyle = `rgba(200,245,245,${0.6 * k})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, 4 + (i % 3) * 3, 0, 7); ctx.stroke();
-    }
-  }
-
   FILM.scene({
     order: 9.5, num: 10, name: 'Work', dur: 34,
     dissolve: 1.2, fadeOut: 1.8,
-    post: (t) => ({ grain: 0.08, vignette: t > 25 && t < 29.3 ? 0.7 : 0.45 }),
+    post: { grain: 0.08, vignette: 0.45 },
     draw(ctx, t) {
       if (t < 4.5) { kiosk(ctx, t, t); return; }
       if (t < 9.5) { cupClose(ctx, t, t - 4.5); return; }
       if (t < 15.5) { aisle(ctx, t, t - 9.5); return; }
-      if (t < 29.3) {
-        const lt = t - 15.5;
-        const k = U.ss(9.8, 12.6, lt);
-        desk(ctx, t, lt, { freeze: k > 0.4, lookUp: U.ss(10.5, 12.5, lt) });
-        if (k > 0) flood(ctx, t, lt - 9.8, k);
-        return;
-      }
-      // the water is gone at once. Late light; he sits still, eyes closed; then gets up to go home
-      const lt = t - 29.3;
-      desk(ctx, t, 14, { freeze: true });
-      D.screen(ctx, 'rgb(255,190,120)', 0.12, 'soft-light');
+      // the day goes; the pile stays. At last he stops, leans back, rubs his eyes, looks at the late light
+      const lt = t - 15.5;
+      const rest = U.ss(10.4, 11.8, lt), rub = U.win(lt, 11.4, 15.2, 0.8, 1.2);
+      desk(ctx, t, Math.min(lt, 10.6), { rest, rub });
+      D.screen(ctx, 'rgb(255,190,120)', 0.12 * U.ss(10, 16, lt), 'soft-light');
     },
     audio(h, fx) {
       h.verb('room', 0.3);
@@ -323,11 +271,8 @@
       fx.scatter(h, 0, 9, 1, 121, (w, k) => fx.bird(h, w, { gain: 0.03, pan: k - 0.5 }));
       h.at(0.3, (w) => fx.whoosh(h, w, { dur: 1.2, f1: 700, f2: 1400, gain: 0.04, color: 'white' })); // pouring
       h.at(1.7, (w) => fx.porcelain(h, w, { pitch: 1.1, gain: 0.06 }));
-      // the cup: the chime from the dream, stretched, and a low swell
-      h.verb('dream', 0.3);
-      h.at(4.6, (w) => { fx.porcelain(h, w, { pitch: 0.55, gain: 0.12 }); fx.whoosh(h, w, { dur: 4.2, f1: 60, f2: 240, gain: 0.14, color: 'brown' }); });
-      h.at(6.2, (w) => fx.porcelain(h, w, { pitch: 0.5, gain: 0.06 }));
-      h.at(7.3, (w) => fx.drip(h, w, { rev: true, gain: 0.08, f: 450 }));
+      // the cup in his hand: an ordinary sound, held a beat too long
+      h.at(5.2, (w) => fx.porcelain(h, w, { pitch: 1.05, gain: 0.05 }));
       // office: the same fluorescent buzz as the corridor, his steps echoing a little too long
       const buzz = fx.hum(h, { f: 100, gain: 0, harm: [1, 0.6, 0.5, 0.4, 0.3], lp: 2400 });
       h.param(buzz.gain, [[0, 0], [9.4, 0], [9.6, 0.016], [29.2, 0.016], [29.3, 0], [29.5, 0.006], [34, 0.006]]);
@@ -342,17 +287,12 @@
         h.at(T + 0.85, (w) => fx.thud(h, w, { gain: 0.14, f: 140, d: 0.08 }));
         h.at(T + 1.3, (w) => fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 2600, Q: 0.7, a: 0.03, d: 0.15, gain: 0.03 }));
       }
-      for (const d of [4.2, 8.1, 11.2]) h.at(15.5 + d, (w) => { fx.thud(h, w, { gain: 0.25, f: 90, d: 0.2 }); fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 2000, Q: 0.5, d: 0.4, gain: 0.06 }); });
+      for (const d of [4.2, 7.4, 9.6]) h.at(15.5 + d, (w) => { fx.thud(h, w, { gain: 0.25, f: 90, d: 0.2 }); fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 2000, Q: 0.5, d: 0.4, gain: 0.06 }); });
       // the clock racing
       for (let T = 15.6; T < 25.3; T += 0.25) h.at(T, (w) => fx.tick(h, w, { gain: 0.025, pitch: 0.8 }));
-      // he goes under: the room muffles, bubbles, the heart
-      const under = fx.bed(h, { color: 'brown', type: 'lowpass', f: 240, gain: 0 });
-      h.param(under.g.gain, [[0, 0], [25.3, 0], [28, 0.22], [29.25, 0.26], [29.3, 0]]);
-      for (let T = 25.6; T < 29.2; T += 0.8) h.at(T, (w) => fx.heartbeat(h, w, { gain: 0.2 }));
-      fx.scatter(h, 25.5, 29.2, 5, 123, (w, k) => fx.bubble(h, w, { size: 0.6 + k * 1.2, gain: 0.06 }));
-      h.at(27.4, (w) => fx.breath(h, w, { dur: 1.2, inhale: false, gain: 0.07, f: 520, rough: 0.6 }));
-      // and out: silence, then one long breath and the afternoon
-      h.at(30.2, (w) => fx.breath(h, w, { dur: 2.4, inhale: false, gain: 0.06, f: 700 }));
+      // he stops: the chair gives, a long breath out
+      h.at(26.0, (w) => { fx.ring(h, w, { f: 520, partials: [1, 1.6], decay: [0.3, 0.2], gain: 0.03 }); fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 900, d: 0.3, gain: 0.03 }); });
+      h.at(27.2, (w) => fx.breath(h, w, { dur: 2.4, inhale: false, gain: 0.06, f: 700 }));
       fx.scatter(h, 30, 34, 0.8, 124, (w, k) => fx.bird(h, w, { gain: 0.02, pan: 0.7 }));
     },
   });

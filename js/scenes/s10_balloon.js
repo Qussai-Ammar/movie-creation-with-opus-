@@ -80,48 +80,36 @@
               col: OUT, shoe: [30, 26, 24], tint: [[90, 50, 40], 0.45 + haze * 0.3], rim: { col: GOLD, dx: 0, dy: -2 },
             }),
           },
-          {
-            X: 4.5, Z: 7.9, draw: (c, x, y, sc) => {
-              const res = C.figure(c, {
-                x, y: y - 0.5 * 1.1 * sc, h: 1.1 * sc, kind: 'girl', facing: -1, sleeves: 'short', col: GIRL, shoe: SANDAL,
-                pose: { sL: 2.3, eL: 0.2, sR: 0.1, eR: 0.2, neck: -0.15 }, tint: [[90, 50, 40], 0.3], rim: { col: GOLD, dx: -2, dy: -1 },
-              });
-              const hand = [x + res.hands[0][0], y - 0.5 * 1.1 * sc + res.hands[0][1]];
-              balloon(c, hand[0] - 0.1 * sc, hand[1] - (0.9 + bob) * sc, 0.2 * sc, t, hand);
-            },
-          },
         ];
         ST.draw(ctx, t, { mode: 'golden', cam: { z: -1, y: 0.25 }, shutters: 0.9, people });
         FILM.sets.birds(ctx, t, 5, 101);
         return;
       }
       if (t < 14) {
-        // she notices him: the tired man coming up the street. She sets off toward him.
+        // he reaches his building; slows; stops at the door, head down, reaching for his keys
         const lt = t - 8;
         entrance(ctx, t);
-        const go = U.inv(3.0, 6, lt);
-        const x = U.lerp(1080, 700, U.smooth(go));
-        const walking = lt > 3.0;
-        const pose = walking ? girlWalk(lt) : { sL: 2.2 + Math.sin(lt * 1.2) * 0.1, eL: 0.25, sR: 0.15, eR: 0.3, neck: -0.25 + 0.2 * U.ss(1.2, 2.2, lt), head: -0.1, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 };
-        if (walking) { pose.sL = 2.1; pose.eL = 0.25; }
-        const res = C.figure(ctx, {
-          x, y: 450, h: 540, kind: 'girl', facing: -1, sleeves: 'short', col: GIRL, shoe: SANDAL, pose,
-          tint: [[110, 60, 40], 0.18], rim: { col: GOLD, dx: -4, dy: -1 },
+        const arrive = U.smooth(U.inv(0, 4.2, lt));
+        const x = U.lerp(180, 1150, arrive);
+        const walking = lt < 4.2;
+        const ph = lt * Math.PI * 2 / 1.1;
+        const pose = walking ? C.poses.walk(ph, 1 - 0.5 * arrive) : { torso: 0.06, neck: 0.42, head: 0.12, sL: 0.25, eL: 0.9 * U.ss(4.6, 5.4, lt), sR: -0.05, eR: 0.15, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 };
+        C.figure(ctx, {
+          x, y: 390, h: 640, facing: 1, col: OUT, shoe: [30, 26, 24], pose,
+          tint: [[110, 60, 40], 0.2], rim: { col: GOLD, dx: -4, dy: -1 },
         });
-        const hand = [x + res.hands[0][0], 450 + res.hands[0][1]];
-        balloon(ctx, hand[0] - 30 + Math.sin(lt * 1.1) * 18, 110 + Math.sin(lt * 1.6) * 14, 95, t, hand);
         return;
       }
       if (t < 22) {
         // she holds it up to him. He hesitates. Then he takes it.
         const lt = t - 14;
         entrance(ctx, t, 300);
-        const arrive = U.smooth(U.inv(0, 1.4, lt));
-        const gx = U.lerp(1300, 1030, arrive);
+        const arrive = U.easeOut(U.inv(0, 1.0, lt));
+        const gx = U.lerp(2050, 1030, arrive);
         const offer = U.ss(1.8, 2.8, lt), lower = U.ss(6.8, 7.6, lt);
         const girl = C.figure(ctx, {
           x: gx, y: 560, h: 560, kind: 'girl', facing: -1, sleeves: 'short', col: GIRL, shoe: SANDAL,
-          pose: lt < 1.4 ? girlWalk(lt, 1 - arrive) : { sL: U.lerp(1.3, 2.25, offer) * (1 - lower) + 0.15 * lower, eL: 0.25, sR: 0.15, eR: 0.3, neck: -0.35, head: -0.2, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
+          pose: lt < 1.0 ? girlWalk(lt * 1.6, 1.2) : { sL: U.lerp(1.3, 2.25, offer) * (1 - lower) + 0.15 * lower, eL: 0.25, sR: 0.15, eR: 0.3, neck: -0.35, head: -0.2, hL: 0.03, kL: 0.02, hR: -0.03, kR: 0.02 },
           tint: [[110, 60, 40], 0.15], rim: { col: GOLD, dx: -4, dy: -1 },
         });
         const gh = [gx + girl.hands[0][0], 560 + girl.hands[0][1]];
@@ -198,9 +186,11 @@
       h.at(3, (w) => fx.carPass(h, w, { dur: 8, gain: 0.04, p1: -0.8, p2: 0.8, far: 1 }));
       // his steps approaching, then stopping
       for (let T = 0.2; T < 8; T += 0.52) { const g = U.lerp(0.04, 0.18, U.inv(0, 8, T)); h.at(T, (w) => fx.footstep(h, w, { gain: g, pan: 0.4, hard: 0.7 })); }
-      // her sandals, quick and light
-      for (let T = 11.0; T < 14; T += 0.35) h.at(T, (w) => fx.footstep(h, w, { gain: 0.07, pan: -0.2, hard: 0.4 }));
-      for (let T = 14.0; T < 15.4; T += 0.35) h.at(T, (w) => fx.footstep(h, w, { gain: 0.08, pan: 0.3, hard: 0.4 }));
+      // his last steps to the door; his keys
+      for (let T = 8.2; T < 12.2; T += 0.55) h.at(T, (w) => fx.footstep(h, w, { gain: 0.14, pan: 0.1, hard: 0.7 }));
+      h.at(12.8, (w) => { for (let i = 0; i < 4; i++) fx.ring(h, w + i * 0.06, { f: 4200 + Math.random() * 1500, partials: [1, 1.6], decay: [0.12, 0.06], gain: 0.018 }); });
+      // her sandals, running in out of nowhere
+      for (let T = 13.9; T < 15.0; T += 0.2) h.at(T, (w) => fx.footstep(h, w, { gain: 0.1, pan: 0.5, hard: 0.4 }));
       // the balloon squeaking on its string as it changes hands
       for (const T of [9.5, 16.8, 20.3, 23.6]) h.at(T, (w) => fx.tone(h, w, { type: 'triangle', f: 540, f2: 600, a: 0.04, d: 0.28, gain: 0.014 }));
       h.at(20.3, (w) => fx.burst(h, w, { color: 'pink', type: 'bandpass', f: 2400, Q: 2, d: 0.2, gain: 0.03 }));
